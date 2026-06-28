@@ -1,0 +1,140 @@
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+    background-color: #f4f4f9;
+}
+
+h1 {
+    color: #333;
+    border-bottom: 2px solid #ccc;
+    padding-bottom: 10px;
+}
+
+.page-section {
+    background-color: #fff;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.hidden {
+    display: none;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input[type="number"], input[type="text"], select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box; /* 確保 padding 不增加寬度 */
+}
+
+button {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+    margin-right: 10px; /* 為了讓按鈕並排時有間距 */
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* 學生輸入專用 */
+fieldset {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+legend {
+    font-weight: bold;
+    padding: 0 10px;
+    color: #007bff;
+}
+
+.condition-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 10px; /* 增加間距 */
+}
+
+.condition-group label {
+    margin-right: 5px;
+    flex-shrink: 0; /* 防止標籤被壓縮 */
+}
+
+.condition-group input[type="number"], .condition-group select {
+    width: 80px; /* 權重和 ID 輸入框較小 */
+}
+
+.error-msg {
+    color: red;
+    font-weight: bold;
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #ffeeee;
+    border: 1px solid red;
+    border-radius: 4px;
+    display: none; /* 預設隱藏 */
+}
+
+/* --- 座位表樣式 --- */
+#seat-map-container {
+    padding: 20px;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.seat-box {
+    border: 2px solid #aaa;
+    padding: 5px;
+    text-align: center;
+    font-weight: bold;
+    border-radius: 6px;
+    min-width: 60px; /* 調整最小寬度 */
+    height: 60px;    /* 調整高度以容納姓名 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: all 0.3s;
+    line-height: 1.2; /* 調整行高 */
+    font-size: 14px;  /* 調整字體大小 */
+    overflow: hidden; /* 防止文字溢出 */
+}
+
+.seat-box.occupied {
+    background-color: #4CAF50;
+    color: white;
+    border-color: #45a049;
+    cursor: grab; /* 拖曳手勢 */
+}
+
+.seat-box.occupied:active {
+    cursor: grabbing; /* 正在拖曳的手勢 */
+}
+
+.seat-box.empty {
+    background-color: #f0f0f0;
+    color: #aaa;
+    border-style: dashed;
+}
