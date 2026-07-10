@@ -278,27 +278,62 @@ legend {
     color: var(--primary-color);
 }
 
-/* 修改原有的 .condition-group 網格 */
+/* 讓板塊邊界更清楚，像是一張獨立的卡片 */
 .condition-group {
     display: grid;
-    /* 移除滑桿空間，改為 3 欄：拖曳符號 (30px)、標籤 (110px)、輸入框 (填滿剩餘空間) */
-    grid-template-columns: 30px 110px 1fr;
+    grid-template-columns: 40px 110px 1fr; /* 留出把手空間 */
     align-items: center;
-    margin-bottom: 18px;
+    margin-bottom: 15px;
     gap: 14px;
-    padding: 10px;
-    background-color: #fafbfc;
-    border: 1px solid transparent;
-    border-radius: 8px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    padding: 10px 12px 10px 8px; /* 調整內距 */
+    background-color: #ffffff; /* 使用純白底色凸顯板塊 */
+    border: 1px solid var(--border-color); /* 實體邊框 */
+    border-radius: 10px;
+    box-shadow: var(--shadow-sm); /* 增加立體感 */
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-/* 正在被拖曳時的樣式 */
-.condition-group.dragging {
-    opacity: 0.5;
+.condition-group:hover {
+    box-shadow: 0 4px 12px rgba(93, 124, 153, 0.15);
+    border-color: var(--primary-color);
+}
+
+/* 拖曳把手的美化與範圍劃分 */
+.drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    font-size: 1.6rem;
+    color: var(--text-secondary);
+    background-color: #f4f6f7; /* 給把手一個獨立的底色區域 */
+    border-radius: 6px;
+    height: 100%;
+    min-height: 40px;
+    transition: background-color 0.2s ease;
+}
+
+.drag-handle:hover {
     background-color: var(--primary-pale);
-    box-shadow: var(--shadow-sm);
-    border: 1px dashed var(--primary-color);
+    color: var(--accent-deep);
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+/* 拖曳中與準備放置時的明確提示 */
+.condition-group.dragging {
+    opacity: 0.9;
+    background-color: var(--primary-pale);
+    border: 2px dashed var(--primary-color);
+    box-shadow: var(--shadow-md);
+    transform: scale(1.02);
+}
+
+.condition-group.drag-over {
+    /* 用深色頂部邊框提示使用者如果放開會插在這個位置的「上方」 */
+    border-top: 4px solid var(--accent-deep); 
 }
 
 .weight-track {

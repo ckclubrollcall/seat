@@ -1049,6 +1049,7 @@ function listenToRoomStatusForStudent() {
 
 // --- 初始化：設定所有拖曳式權重滑桿與自動加入邏輯 ---
 document.addEventListener('DOMContentLoaded', () => {
+    initConditionDragAndDrop();
 
     // 新增：檢查網址是否有帶入房間代碼參數 (例如 ?room=A1B2C3)
     const urlParams = new URLSearchParams(window.location.search);
@@ -1067,3 +1068,61 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+
+/** 初始化偏好條件的拖曳排序功能 */
+function initConditionDragAndDrop() {
+    const list = document.getElementById('condition-list');
+    if (!list) return;
+
+    let draggedItem = null;
+
+    list.addEventListener('dragstart', (e) => {
+        const target = e.target.closest('.condition-group');
+        if (!target) return;
+        draggedItem = target;
+        // 使用 setTimeout 讓原本的元素在畫面上保持原樣，只有分身跟著游標走
+        setTimeout(() => target.classList.add('dragging'), 0);
+    });
+
+    list.addEventListener('dragend', (e) => {
+        const target = e.target.closest('.condition-group');
+        if (!target) return;
+        target.classList.remove('dragging');
+        draggedItem = null;
+        // 清除所有提示線
+        document.querySelectorAll('.condition-group').forEach(el => el.classList.remove('drag-over'));
+    });
+
+    list.addEventListener('dragover', (e) => {
+        e.preventDefault(); // 必須阻止預設行為才能允許放置 (Drop)
+        const target = e.target.closest('.condition-group');
+        if (target && target !== draggedItem) {
+            target.classList.add('drag-over');
+        }
+    });
+
+    list.addEventListener('dragleave', (e) => {
+        const target = e.target.closest('.condition-group');
+        if (target && target !== draggedItem) {
+            target.classList.remove('drag-over');
+        }
+    });
+
+    list.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const target = e.target.closest('.condition-group');
+        if (target && target !== draggedItem) {
+            target.classList.remove('drag-over');
+            
+            // 判斷游標位置，決定要安插在目標元素的「上方」還是「下方」
+            const rect = target.getBoundingClientRect();
+            const insertAfter = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+            
+            if (insertAfter) {
+                list.insertBefore(draggedItem, target.nextSibling);
+            } else {
+                list.insertBefore(draggedItem, target);
+            }
+        }
+    });
+}
