@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>排座位終結者 - 智能座位分配系統</title>
     <link rel="stylesheet" href="style.css">
+    <!-- 引入 QRCode.js 套件 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -98,14 +100,18 @@
         </div>
     </section>
 
-    <!-- 線上收集學生資料：管理員等待畫面 -->
+    <!-- 線上收集學生資料：管理員等待畫面 -->   
     <section id="admin-waiting-page" class="page-section hidden">
         <h2>等待學生填寫</h2>
-        <p>把下方房間代碼交給學生，讓他們在首頁選擇「加入房間」並輸入代碼填寫偏好：</p>
+        <p>把下方房間代碼或 QR Code 交給學生，讓他們加入房間填寫偏好：</p>
         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
             <span class="room-code-badge" id="display-room-code"></span>
             <button onclick="copyRoomCode()" class="btn-info" style="margin-top: 0;">複製代碼</button>
         </div>
+        
+        <!-- 新增 QR Code 顯示區塊 -->
+        <div id="qrcode-container" style="margin-bottom: 20px; padding: 15px; background: white; display: inline-block; border-radius: 10px; border: 1px solid var(--border-color);"></div>
+
         <p>目前已提交資料人數: <b style="color: var(--primary-color); font-size: 1.1rem;"><span id="online-student-status">0 / ?</span></b></p>
         <ul id="submitted-students-list"></ul>
         <button onclick="finishOnlineCollection()" class="btn-warning">收集完畢，生成座位表</button>

@@ -897,6 +897,21 @@ async function createOnlineRoom() {
         document.getElementById('display-room-code').textContent = currentRoomCode;
         document.getElementById('online-student-status').textContent = `0 / ${classSettings.allStudentIds.length}`;
         document.getElementById('submitted-students-list').innerHTML = '';
+        
+        // --- 新增：產生 QR Code ---
+        const qrcodeContainer = document.getElementById('qrcode-container');
+        qrcodeContainer.innerHTML = ''; // 清除舊的 QR Code
+        const joinUrl = window.location.origin + window.location.pathname + "?room=" + currentRoomCode;
+        new QRCode(qrcodeContainer, {
+            text: joinUrl,
+            width: 160,
+            height: 160,
+            colorDark : "#38424a",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        });
+        // -------------------------
+
         showSection('admin-waiting-page');
 
         // 3. 即時監聽學生提交的資料
@@ -1036,7 +1051,24 @@ function listenToRoomStatusForStudent() {
     });
 }
 
-// --- 初始化：設定所有拖曳式權重滑桿 ---
+// --- 初始化：設定所有拖曳式權重滑桿與自動加入邏輯 ---
 document.addEventListener('DOMContentLoaded', () => {
     initAllWeightDrags();
+
+    // 新增：檢查網址是否有帶入房間代碼參數 (例如 ?room=A1B2C3)
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomCodeParam = urlParams.get('room');
+
+    if (roomCodeParam) {
+        // 找到輸入框並自動填入
+        const roomInput = document.getElementById('room-code');
+        if (roomInput) {
+            roomInput.value = roomCodeParam;
+            
+            // 延遲執行，確保 Firebase 與頁面渲染完成
+            setTimeout(() => {
+                window.joinRoom();
+            }, 500);
+        }
+    }
 });
