@@ -135,64 +135,45 @@
             </div>
 
             <fieldset>
-                <legend>座位偏好條件（拖曳滑桿表達重視程度）</legend>
-                <div class="condition-group">
-                    <label for="pref-1-id">想跟誰坐 (1):</label>
-                    <input type="number" class="preference-id" id="pref-1-id" placeholder="好友座號">
-                    <div class="weight-drag" id="pref-1-weight-drag">
-                        <div class="weight-track">
-                            <div class="weight-fill"></div>
-                            <div class="weight-handle" tabindex="0"></div>
-                        </div>
-                        <div class="weight-label">未設定</div>
+                <legend>座位偏好條件（按住 ≡ 拖曳調整優先順序，越上面越重要）</legend>
+                <div id="condition-list">
+                    <!-- 條件 1 -->
+                    <div class="condition-group" draggable="true">
+                        <div class="drag-handle">≡</div>
+                        <label for="pref-1-id">想跟誰坐 (1):</label>
+                        <input type="number" class="preference-id" id="pref-1-id" placeholder="好友座號">
                     </div>
-                    <input type="hidden" id="pref-1-w" value="0">
-                </div>
-                <div class="condition-group">
-                    <label for="pref-2-id">想跟誰坐 (2):</label>
-                    <input type="number" class="preference-id" id="pref-2-id" placeholder="好友座號">
-                    <div class="weight-drag" id="pref-2-weight-drag">
-                        <div class="weight-track">
-                            <div class="weight-fill"></div>
-                            <div class="weight-handle" tabindex="0"></div>
-                        </div>
-                        <div class="weight-label">未設定</div>
+                    
+                    <!-- 條件 2 -->
+                    <div class="condition-group" draggable="true">
+                        <div class="drag-handle">≡</div>
+                        <label for="pref-2-id">想跟誰坐 (2):</label>
+                        <input type="number" class="preference-id" id="pref-2-id" placeholder="好友座號">
                     </div>
-                    <input type="hidden" id="pref-2-w" value="0">
-                </div>
-                <div class="condition-group">
-                    <label for="pref-5-val">想坐前後:</label>
-                    <select id="pref-5-val">
-                        <option value="不限">不限</option>
-                        <option value="前">前面 (靠講台)</option>
-                        <option value="中">中間 (教室中央)</option>
-                        <option value="後">後面 (靠後門)</option>
-                    </select>
-                    <div class="weight-drag" id="pref-5-weight-drag">
-                        <div class="weight-track">
-                            <div class="weight-fill"></div>
-                            <div class="weight-handle" tabindex="0"></div>
-                        </div>
-                        <div class="weight-label">未設定</div>
+                    
+                    <!-- 條件 3 -->
+                    <div class="condition-group" draggable="true">
+                        <div class="drag-handle">≡</div>
+                        <label for="pref-5-val">想坐前後:</label>
+                        <select id="pref-5-val">
+                            <option value="不限">不限</option>
+                            <option value="前">前面 (靠講台)</option>
+                            <option value="中">中間 (教室中央)</option>
+                            <option value="後">後面 (靠後門)</option>
+                        </select>
                     </div>
-                    <input type="hidden" id="pref-5-w" value="0">
-                </div>
-                <div class="condition-group">
-                    <label for="pref-6-val">想坐左右:</label>
-                    <select id="pref-6-val">
-                        <option value="不限">不限</option>
-                        <option value="左">左邊 (靠窗/走廊)</option>
-                        <option value="中">中間</option>
-                        <option value="右">右邊 (靠窗/走廊)</option>
-                    </select>
-                    <div class="weight-drag" id="pref-6-weight-drag">
-                        <div class="weight-track">
-                            <div class="weight-fill"></div>
-                            <div class="weight-handle" tabindex="0"></div>
-                        </div>
-                        <div class="weight-label">未設定</div>
+                    
+                    <!-- 條件 4 -->
+                    <div class="condition-group" draggable="true">
+                        <div class="drag-handle">≡</div>
+                        <label for="pref-6-val">想坐左右:</label>
+                        <select id="pref-6-val">
+                            <option value="不限">不限</option>
+                            <option value="左">左邊 (靠窗/走廊)</option>
+                            <option value="中">中間</option>
+                            <option value="右">右邊 (靠窗/走廊)</option>
+                        </select>
                     </div>
-                    <input type="hidden" id="pref-6-w" value="0">
                 </div>
             </fieldset>
 

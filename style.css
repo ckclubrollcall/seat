@@ -278,32 +278,27 @@ legend {
     color: var(--primary-color);
 }
 
+/* 修改原有的 .condition-group 網格 */
 .condition-group {
     display: grid;
-    grid-template-columns: 110px 1fr 170px;
+    /* 移除滑桿空間，改為 3 欄：拖曳符號 (30px)、標籤 (110px)、輸入框 (填滿剩餘空間) */
+    grid-template-columns: 30px 110px 1fr;
     align-items: center;
     margin-bottom: 18px;
     gap: 14px;
+    padding: 10px;
+    background-color: #fafbfc;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.condition-group:last-child {
-    margin-bottom: 0;
-}
-
-.condition-group label {
-    margin-bottom: 0;
-    font-size: 0.9rem;
-    color: var(--text-primary);
-}
-
-.condition-group input[type="number"],
-.condition-group select {
-    width: 100%;
-}
-
-/* --- 拖曳式權重選擇器 --- */
-.weight-drag {
-    user-select: none;
+/* 正在被拖曳時的樣式 */
+.condition-group.dragging {
+    opacity: 0.5;
+    background-color: var(--primary-pale);
+    box-shadow: var(--shadow-sm);
+    border: 1px dashed var(--primary-color);
 }
 
 .weight-track {

@@ -313,34 +313,31 @@ window.submitStudentPreferences = function() {
         return displayError("輸入錯誤: 此座號不是該班級的有效座號。");
     }
 
-    // --- 2. 條件與權重驗證 ---
-    const preferences = [
-        { id: 'pref-1-id', w: 'pref-1-w', type: 'id', name: '想跟誰坐(1)' },
-        { id: 'pref-2-id', w: 'pref-2-w', type: 'id', name: '想跟誰坐(2)' },
-        { id: 'pref-5-val', w: 'pref-5-w', type: 'select', name: '前後偏好' },
-        { id: 'pref-6-val', w: 'pref-6-w', type: 'select', name: '左右偏好' }
-    ];
-
+    // --- 2. 條件與權重驗證（依照拖曳順序給分） ---
     const studentPreferences = { wantToSitWith: [], frontBack: {}, leftRightCenter: {} };
     const partnerIdsSet = new Set();
+    
+    // 取得畫面上目前排序好的所有條件區塊
+    const conditionGroups = document.querySelectorAll('#condition-list .condition-group');
+    let currentWeight = 4; // 第一順位給予最高權重 4，接下來遞減
 
-    for (const pref of preferences) {
-        const val = document.getElementById(pref.id).value.trim();
-        const weight = parseInt(document.getElementById(pref.w).value) || 0;
+    for (const group of conditionGroups) {
+        // 找到該區塊內的輸入框或下拉選單
+        const input = group.querySelector('input:not(.preference-id)[type="number"], input.preference-id, select');
+        if (!input) continue;
 
-        const hasValue = (pref.type === 'id') ? !!val : (val !== '不限');
-        const hasWeight = weight > 0;
+        const val = input.value.trim();
+        const id = input.id;
+        
+        const isIdType = (id === 'pref-1-id' || id === 'pref-2-id');
+        const hasValue = isIdType ? !!val : (val !== '不限');
 
-        if (hasValue && !hasWeight) {
-            return displayError(`輸入錯誤: 您設定了「${pref.name}」條件，但還沒拖曳設定重視程度。`);
-        }
-        if (!hasValue && hasWeight) {
-            return displayError(`輸入錯誤: 您設定了「${pref.name}」的重視程度，但未填入條件。`);
-        }
+        // 如果學生有填寫該條件，才賦予權重
+        if (hasValue) {
+            const weight = currentWeight > 0 ? currentWeight : 1; // 最少給 1 分
+            currentWeight--; // 下一個有效條件的權重遞減
 
-        if (hasValue && hasWeight) {
-            // 收集數據與額外 bug 檢查
-            if (pref.type === 'id') {
+            if (isIdType) {
                 const partnerId = parseInt(val);
                 if (isNaN(partnerId)) {
                     return displayError("輸入錯誤: 朋友的座號必須是數字。");
@@ -358,9 +355,9 @@ window.submitStudentPreferences = function() {
                 } else {
                     return displayError(`輸入錯誤: 座號 ${partnerId} 不是班上的有效座號。`);
                 }
-            } else if (pref.name === '前後偏好') {
+            } else if (id === 'pref-5-val') {
                 studentPreferences.frontBack = { value: val, weight: weight };
-            } else if (pref.name === '左右偏好') {
+            } else if (id === 'pref-6-val') {
                 studentPreferences.leftRightCenter = { value: val, weight: weight };
             }
         }
@@ -443,7 +440,6 @@ function resetStudentForm() {
             }
         }
     });
-    resetAllWeightDrags();
 }
 
 /** 判斷座位屬於哪個 前/中/後 區域 */
@@ -1053,7 +1049,6 @@ function listenToRoomStatusForStudent() {
 
 // --- 初始化：設定所有拖曳式權重滑桿與自動加入邏輯 ---
 document.addEventListener('DOMContentLoaded', () => {
-    initAllWeightDrags();
 
     // 新增：檢查網址是否有帶入房間代碼參數 (例如 ?room=A1B2C3)
     const urlParams = new URLSearchParams(window.location.search);
