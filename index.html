@@ -9,19 +9,59 @@
 <body>
 
     <h1>排座位終結者</h1>
-    <div class="subtitle">自動化班級座位配置與偏好媒合工具</div>
+    <div class="subtitle">依照座位偏好自動媒合出最合適的班級座位表</div>
 
-    <!-- 階段 I: 教室與學生座號設定 -->
-    <section id="setup-page" class="page-section">
-        <h2>階段 I: 教室與學生座號設定</h2>
-        
-        <div class="form-group" style="margin-top: 25px;">
-            <label for="class-name">班級名稱:</label>
-            <input type="text" id="class-name" placeholder="例如: 建中201班">
+    <!-- 首頁：選擇使用方式 -->
+    <section id="landing-page" class="page-section">
+        <h2>開始使用</h2>
+        <p>選擇最適合你的方式：讓全班同時上線填寫，或是用同一台電腦輪流輸入。</p>
+
+        <div class="landing-options">
+            <div class="landing-btn create" onclick="goToSetup('onlineCreate')">
+                <div class="icon">🛰️</div>
+                <div class="title">建立線上房間</div>
+                <div class="desc">產生房間代碼，讓學生用自己的裝置上線填寫偏好</div>
+            </div>
+            <div class="landing-btn join" onclick="showJoinRoomPage()">
+                <div class="icon">🔑</div>
+                <div class="title">加入房間</div>
+                <div class="desc">輸入老師提供的房間代碼，填寫你自己的座位偏好</div>
+            </div>
+            <div class="landing-btn offline" onclick="goToSetup('offline')">
+                <div class="icon">🖥️</div>
+                <div class="title">線下模式</div>
+                <div class="desc">用同一台電腦，讓全班同學輪流輸入偏好資料</div>
+            </div>
         </div>
-        
+
         <div id="error-message" class="error-msg"></div>
-        
+    </section>
+
+    <!-- 加入房間 -->
+    <section id="join-room-page" class="page-section hidden">
+        <h2>加入房間</h2>
+        <p>輸入老師提供的 6 碼房間代碼，加入班級並填寫你的座位偏好。</p>
+
+        <div class="join-box">
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="room-code">房間代碼:</label>
+                <input type="text" id="room-code" placeholder="例如: A1B2C3" style="text-transform: uppercase;">
+            </div>
+            <button onclick="joinRoom()" class="btn-info">加入房間</button>
+            <button onclick="backToLanding()" class="btn-secondary">返回</button>
+        </div>
+    </section>
+
+    <!-- 教室設定 -->
+    <section id="setup-page" class="page-section hidden">
+        <h2>教室設定</h2>
+        <p>先告訴我們班級名稱和教室的排列方式，接著就能標出實際可以坐人的座位。</p>
+
+        <div class="form-group">
+            <label for="class-name">班級名稱:</label>
+            <input type="text" id="class-name" placeholder="例如: 201班">
+        </div>
+
         <div class="form-row">
             <div class="form-group">
                 <label for="rows">教室排數 (前後):</label>
@@ -32,42 +72,36 @@
                 <input type="number" id="cols" min="1" value="6">
             </div>
         </div>
-        
-        <div class="form-row">
-            <div class="form-group">
-                <label for="min-id">學生最小座號:</label>
-                <input type="number" id="min-id" min="1" value="1">
-            </div>
-            <div class="form-group">
-                <label for="max-id">學生最大座號:</label>
-                <input type="number" id="max-id" value="30">
-            </div>
-        </div>
-        
-        <div class="form-group">
-            <label for="excluded-ids">需排除的座號 (以逗號分隔, 如: 4,7,29):</label>
-            <input type="text" id="excluded-ids" placeholder="無則留空">
-        </div>
-        
-        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-color); display: flex; flex-wrap: wrap; gap: 10px;">
-            <button onclick="startStudentInput()" class="btn-primary">線下模式 (同一台電腦輪流填)</button>
-            <button onclick="createOnlineRoom()" class="btn-success">建立線上房間 (管理員)</button>
-        </div>
 
-        <div id="join-room-section">
-            <h3>學生加入房間</h3>
-            <div class="form-group" style="margin-bottom: 15px;">
-                <label for="room-code">輸入 6 碼房間代碼:</label>
-                <input type="text" id="room-code" placeholder="例如: A1B2C3" style="text-transform: uppercase;">
-            </div>
-            <button onclick="joinRoom()" class="btn-info">加入房間填寫條件</button>
+        <div style="margin-top: 20px;">
+            <button onclick="goToLayoutConfig()" class="btn-primary">下一步：標記座位</button>
+            <button onclick="backToLanding()" class="btn-secondary">返回</button>
         </div>
     </section>
 
-    <!-- 階段 II: 線上收集學生資料 (等待頁面) -->
+    <!-- 座位配置：點擊切換啟用/停用 -->
+    <section id="layout-config-page" class="page-section hidden">
+        <h2>座位配置</h2>
+        <p>下方依教室排列畫出所有座位。點擊座位可以切換「不坐人」的空位（例如走道、講桌旁），其餘座位皆會用來分配學生。</p>
+
+        <div class="layout-config-legend">
+            <span><span class="legend-swatch active-swatch"></span>可分配座位</span>
+            <span><span class="legend-swatch inactive-swatch"></span>不坐人（點擊切換）</span>
+            <span>目前可用座位：<span class="seat-count-badge" id="active-seat-count">0</span> / <span id="total-seat-count">0</span></span>
+        </div>
+
+        <div id="layout-config-container"></div>
+
+        <div style="margin-top: 25px;">
+            <button onclick="confirmLayoutConfig()" class="btn-primary" id="layout-confirm-btn">確認座位配置</button>
+            <button onclick="backToSetup()" class="btn-secondary">上一步</button>
+        </div>
+    </section>
+
+    <!-- 線上收集學生資料：管理員等待畫面 -->
     <section id="admin-waiting-page" class="page-section hidden">
-        <h2>階段 II: 線上收集學生資料</h2>
-        <p>請讓學生在首頁輸入下方房間代碼加入房間並填寫偏好：</p>
+        <h2>等待學生填寫</h2>
+        <p>把下方房間代碼交給學生，讓他們在首頁選擇「加入房間」並輸入代碼填寫偏好：</p>
         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
             <span class="room-code-badge" id="display-room-code"></span>
             <button onclick="copyRoomCode()" class="btn-info" style="margin-top: 0;">複製代碼</button>
@@ -77,36 +111,48 @@
         <button onclick="finishOnlineCollection()" class="btn-warning">收集完畢，生成座位表</button>
     </section>
 
-    <!-- 階段 II: 學生條件輸入 -->
+    <!-- 學生條件輸入 -->
     <section id="input-page" class="page-section hidden">
-        <h2>階段 II: 學生條件輸入</h2>
+        <h2>填寫座位偏好</h2>
         <p id="student-status-wrapper">目前輸入學生: <span id="current-student-status" style="font-weight: bold; color: var(--primary-color);">1 / ?</span></p>
 
         <div id="student-form-container">
             <div class="form-row">
                 <div class="form-group">
-                    <label for="student-id">輸入你的座號:</label>
+                    <label for="student-id">你的座號:</label>
                     <input type="number" id="student-id" min="1">
                 </div>
                 <div class="form-group">
-                    <label for="student-name">輸入你的姓名 (選填):</label>
+                    <label for="student-name">你的姓名 (選填):</label>
                     <input type="text" id="student-name" placeholder="例如: 王小明">
                 </div>
             </div>
 
             <fieldset>
-                <legend>座位偏好條件 (權重 1-4，數值越大越優先)</legend>
+                <legend>座位偏好條件（拖曳滑桿表達重視程度）</legend>
                 <div class="condition-group">
                     <label for="pref-1-id">想跟誰坐 (1):</label>
                     <input type="number" class="preference-id" id="pref-1-id" placeholder="好友座號">
-                    <label for="pref-1-w">權重 (1-4):</label>
-                    <input type="number" class="weight-input" min="1" max="4" id="pref-1-w" placeholder="1-4">
+                    <div class="weight-drag" id="pref-1-weight-drag">
+                        <div class="weight-track">
+                            <div class="weight-fill"></div>
+                            <div class="weight-handle" tabindex="0"></div>
+                        </div>
+                        <div class="weight-label">未設定</div>
+                    </div>
+                    <input type="hidden" id="pref-1-w" value="0">
                 </div>
                 <div class="condition-group">
                     <label for="pref-2-id">想跟誰坐 (2):</label>
                     <input type="number" class="preference-id" id="pref-2-id" placeholder="好友座號">
-                    <label for="pref-2-w">權重 (1-4):</label>
-                    <input type="number" class="weight-input" min="1" max="4" id="pref-2-w" placeholder="1-4">
+                    <div class="weight-drag" id="pref-2-weight-drag">
+                        <div class="weight-track">
+                            <div class="weight-fill"></div>
+                            <div class="weight-handle" tabindex="0"></div>
+                        </div>
+                        <div class="weight-label">未設定</div>
+                    </div>
+                    <input type="hidden" id="pref-2-w" value="0">
                 </div>
                 <div class="condition-group">
                     <label for="pref-5-val">想坐前後:</label>
@@ -116,8 +162,14 @@
                         <option value="中">中間 (教室中央)</option>
                         <option value="後">後面 (靠後門)</option>
                     </select>
-                    <label for="pref-5-w">權重 (1-4):</label>
-                    <input type="number" class="weight-input" min="1" max="4" id="pref-5-w" placeholder="1-4">
+                    <div class="weight-drag" id="pref-5-weight-drag">
+                        <div class="weight-track">
+                            <div class="weight-fill"></div>
+                            <div class="weight-handle" tabindex="0"></div>
+                        </div>
+                        <div class="weight-label">未設定</div>
+                    </div>
+                    <input type="hidden" id="pref-5-w" value="0">
                 </div>
                 <div class="condition-group">
                     <label for="pref-6-val">想坐左右:</label>
@@ -127,8 +179,14 @@
                         <option value="中">中間</option>
                         <option value="右">右邊 (靠窗/走廊)</option>
                     </select>
-                    <label for="pref-6-w">權重 (1-4):</label>
-                    <input type="number" class="weight-input" min="1" max="4" id="pref-6-w" placeholder="1-4">
+                    <div class="weight-drag" id="pref-6-weight-drag">
+                        <div class="weight-track">
+                            <div class="weight-fill"></div>
+                            <div class="weight-handle" tabindex="0"></div>
+                        </div>
+                        <div class="weight-label">未設定</div>
+                    </div>
+                    <input type="hidden" id="pref-6-w" value="0">
                 </div>
             </fieldset>
 
@@ -136,11 +194,11 @@
         </div>
     </section>
 
-    <!-- 階段 III: 座位分配結果 -->
+    <!-- 座位分配結果 -->
     <section id="result-page" class="page-section hidden">
-        <h2>階段 III: 座位分配結果</h2>
-        <p>分配依據: 權重高 > 隨機判定。<b>(提示: 可拖曳座位方塊來交換學生位置或移至空位)</b></p>
-        
+        <h2>座位分配結果</h2>
+        <p>分配依據: 偏好權重高者優先 > 隨機判定。<b>(提示: 可拖曳座位方塊來交換學生位置或移至空位)</b></p>
+
         <!-- 講台指示 -->
         <div id="podium-container">
             <div class="podium">講台 (前方)</div>
@@ -149,7 +207,7 @@
         <div id="seat-map-container">
             <!-- 動態生成座位表 -->
         </div>
-        
+
         <div style="margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px;">
             <button onclick="distributeSeats()" id="redistribute-btn" class="btn-primary">重新分配</button>
             <button onclick="downloadDoc()" id="download-btn" class="btn-success">下載為 DOC 檔案</button>
@@ -183,7 +241,7 @@
     <script src="script.js" type="module"></script>
 
     <div class="footer-info">
-        <p>聯絡電話: 0900737183 &nbsp;|&nbsp; 電子郵件: ck.ycwang0508@gmail.com</p>
+        <p>排座位終結者 · 自動化座位配置工具</p>
     </div>
 </body>
 </html>
