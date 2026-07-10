@@ -1,140 +1,488 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+    /* 莫蘭迪色系變數 */
+    --bg-color: #f6f5f2;          /* 暖沙灰背景 */
+    --card-bg: #ffffff;           /* 卡片純白 */
+    --text-primary: #3d4043;      /* 深炭灰（柔和黑） */
+    --text-secondary: #7e8285;    /* 霧灰（副文本） */
+    
+    --primary-color: #8da1b9;     /* 霧霾藍 */
+    --primary-hover: #7a8ea5;
+    --primary-light: #edf2f7;
+    
+    --accent-green: #9fb8ad;      /* 鼠尾草綠 */
+    --accent-green-hover: #8ca59a;
+    --accent-green-light: #eff5f2;
+    
+    --accent-clay: #cda291;       /* 陶土粉 */
+    --accent-clay-hover: #be9180;
+    
+    --accent-ochre: #d6b588;      /* 暖赭黃 */
+    --accent-ochre-hover: #c5a477;
+    
+    --border-color: #e2e1dc;      /* 淺灰邊框 */
+    --border-focus: #b2b4b8;      /* 聚焦邊框 */
+    
+    --error-bg: #f7eded;
+    --error-text: #bd615c;
+    --error-border: #ebd1d0;
+    
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.02);
+    --shadow-md: 0 8px 24px rgba(141, 161, 185, 0.08);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.04);
+    
+    --font-family: 'Outfit', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 body {
-    font-family: Arial, sans-serif;
-    padding: 20px;
-    max-width: 900px;
+    font-family: var(--font-family);
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    line-height: 1.6;
+    padding: 40px 20px;
+    max-width: 1000px;
     margin: 0 auto;
-    background-color: #f4f4f9;
+    -webkit-font-smoothing: antialiased;
 }
 
 h1 {
-    color: #333;
-    border-bottom: 2px solid #ccc;
-    padding-bottom: 10px;
+    font-size: 2.2rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+}
+
+.subtitle {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-bottom: 30px;
 }
 
 .page-section {
-    background-color: #fff;
-    padding: 20px;
-    margin-top: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: var(--card-bg);
+    padding: 35px;
+    margin-top: 25px;
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.page-section h2 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 15px;
+    border-left: 4px solid var(--primary-color);
+    padding-left: 12px;
+}
+
+.page-section p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-bottom: 15px;
+    line-height: 1.7;
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
+/* 表單元件設計 */
 .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
 }
 
 label {
     display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--text-primary);
 }
 
 input[type="number"], input[type="text"], select {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
     width: 100%;
-    box-sizing: border-box; /* 確保 padding 不增加寬度 */
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background-color: #fafafa;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-family: var(--font-family);
+    transition: all 0.3s ease;
 }
 
+input[type="number"]:focus, input[type="text"]:focus, select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background-color: #ffffff;
+    box-shadow: 0 0 0 4px var(--primary-light);
+}
+
+/* 按鈕美化 */
 button {
-    padding: 10px 15px;
-    background-color: #007bff;
-    color: white;
+    font-family: var(--font-family);
+    font-size: 0.95rem;
+    font-weight: 500;
+    padding: 12px 24px;
     border: none;
-    border-radius: 4px;
+    border-radius: 10px;
     cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-sm);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     margin-top: 10px;
-    margin-right: 10px; /* 為了讓按鈕並排時有間距 */
+    margin-right: 12px;
 }
 
 button:hover {
-    background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* 學生輸入專用 */
+button:active {
+    transform: translateY(0);
+}
+
+/* 不同按鈕的角色顏色 */
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+}
+
+.btn-success {
+    background-color: var(--accent-green);
+    color: white;
+}
+.btn-success:hover {
+    background-color: var(--accent-green-hover);
+}
+
+.btn-info {
+    background-color: var(--accent-clay);
+    color: white;
+}
+.btn-info:hover {
+    background-color: var(--accent-clay-hover);
+}
+
+.btn-warning {
+    background-color: var(--accent-ochre);
+    color: white;
+}
+.btn-warning:hover {
+    background-color: var(--accent-ochre-hover);
+}
+
+/* 加入房間區塊 */
+#join-room-section {
+    margin-top: 30px;
+    padding: 24px;
+    background-color: var(--primary-light);
+    border-radius: 14px;
+    border: 1px dashed var(--primary-color);
+}
+
+#join-room-section h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+/* 條件輸入欄位集 */
 fieldset {
-    border: 1px solid #ddd;
-    padding: 15px;
-    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 25px;
+    background-color: #fafafa;
 }
 
 legend {
-    font-weight: bold;
-    padding: 0 10px;
-    color: #007bff;
+    font-weight: 600;
+    font-size: 1.05rem;
+    padding: 0 12px;
+    color: var(--primary-color);
 }
 
 .condition-group {
-    display: flex;
+    display: grid;
+    grid-template-columns: 100px 1fr 80px 1fr;
     align-items: center;
-    margin-bottom: 10px;
-    gap: 10px; /* 增加間距 */
+    margin-bottom: 16px;
+    gap: 12px;
+}
+
+.condition-group:last-child {
+    margin-bottom: 0;
 }
 
 .condition-group label {
-    margin-right: 5px;
-    flex-shrink: 0; /* 防止標籤被壓縮 */
+    margin-bottom: 0;
+    font-size: 0.9rem;
+    color: var(--text-primary);
 }
 
-.condition-group input[type="number"], .condition-group select {
-    width: 80px; /* 權重和 ID 輸入框較小 */
+.condition-group input[type="number"], 
+.condition-group select {
+    width: 100%;
 }
 
+/* 錯誤提示 */
 .error-msg {
-    color: red;
-    font-weight: bold;
-    margin-top: 10px;
+    color: var(--error-text);
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin: 15px 0;
+    padding: 12px 16px;
+    background-color: var(--error-bg);
+    border: 1px solid var(--error-border);
+    border-radius: 8px;
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+/* 線上等待頁面名單 */
+#submitted-students-list {
+    margin-top: 15px;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: #fafafa;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
     padding: 10px;
-    background-color: #ffeeee;
-    border: 1px solid red;
-    border-radius: 4px;
-    display: none; /* 預設隱藏 */
 }
 
-/* --- 座位表樣式 --- */
-#seat-map-container {
-    padding: 20px;
-    gap: 10px;
-    margin-top: 20px;
+#submitted-students-list li {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f0efeb;
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: slideIn 0.25s ease-out;
 }
 
-.seat-box {
-    border: 2px solid #aaa;
-    padding: 5px;
-    text-align: center;
+#submitted-students-list li:last-child {
+    border-bottom: none;
+}
+
+#submitted-students-list li::before {
+    content: "✓";
+    color: var(--accent-green);
     font-weight: bold;
-    border-radius: 6px;
-    min-width: 60px; /* 調整最小寬度 */
-    height: 60px;    /* 調整高度以容納姓名 */
+    margin-right: 8px;
+}
+
+/* 房號顯示樣式 */
+.room-code-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: var(--primary-light);
+    border: 1px solid var(--primary-color);
+    color: var(--text-primary);
+    font-family: monospace;
+    font-size: 1.6rem;
+    font-weight: 700;
+    border-radius: 8px;
+    letter-spacing: 2px;
+    margin: 10px 0;
+}
+
+/* 講台樣式 */
+#podium-container {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0 25px 0;
+    width: 100%;
+}
+
+.podium {
+    width: 280px;
+    height: 40px;
+    background-color: #d8d6ce;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    transition: all 0.3s;
-    line-height: 1.2; /* 調整行高 */
-    font-size: 14px;  /* 調整字體大小 */
-    overflow: hidden; /* 防止文字溢出 */
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #6a6c6e;
+    letter-spacing: 4px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+/* --- 座位表佈局與方塊 --- */
+#seat-map-container {
+    padding: 10px 0;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.seat-box {
+    aspect-ratio: 1.1 / 1;
+    border: 1px solid var(--border-color);
+    padding: 12px 8px;
+    text-align: center;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: var(--font-family);
+    user-select: none;
+}
+
+/* 學生座號樣式 */
+.seat-student-id {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+/* 學生姓名樣式 */
+.seat-student-name {
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+/* 有人座位的樣式 */
 .seat-box.occupied {
-    background-color: #4CAF50;
-    color: white;
-    border-color: #45a049;
-    cursor: grab; /* 拖曳手勢 */
+    background-color: var(--primary-light);
+    border-color: var(--primary-color);
+    color: var(--text-primary);
+    cursor: grab;
+}
+
+.seat-box.occupied .seat-student-id {
+    color: #6f8095;
+}
+
+.seat-box.occupied:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(141, 161, 185, 0.18);
+    border-color: var(--primary-color);
 }
 
 .seat-box.occupied:active {
-    cursor: grabbing; /* 正在拖曳的手勢 */
+    cursor: grabbing;
 }
 
+/* 唯讀模式有人座位的樣式（學生端） */
+.seat-box.occupied-readonly {
+    background-color: var(--primary-light);
+    border-color: var(--primary-color);
+    color: var(--text-primary);
+    cursor: default;
+}
+
+.seat-box.occupied-readonly .seat-student-id {
+    color: #6f8095;
+}
+
+/* 空座位的樣式 */
 .seat-box.empty {
-    background-color: #f0f0f0;
-    color: #aaa;
+    background-color: #faf9f6;
+    color: var(--text-secondary);
     border-style: dashed;
+    border-width: 1.5px;
+    cursor: pointer;
+}
+
+.seat-box.empty:hover {
+    background-color: #f2f0ea;
+    border-color: var(--border-focus);
+}
+
+.seat-box.empty .seat-student-name {
+    font-weight: 400;
+    font-size: 0.85rem;
+}
+
+/* 拖曳中樣式 */
+.seat-box.dragging {
+    opacity: 0.4;
+    transform: scale(0.95);
+    border-style: dashed;
+}
+
+.seat-box.drag-over {
+    border-color: var(--accent-green);
+    background-color: var(--accent-green-light);
+    transform: scale(1.03);
+    box-shadow: 0 4px 12px rgba(159, 184, 173, 0.2);
+}
+
+/* 版權與聯繫資訊 */
+.footer-info {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin-top: 40px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 20px;
+}
+
+/* 動畫效果 */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 20px 10px;
+    }
+    .page-section {
+        padding: 20px;
+    }
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+    .condition-group {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+    .condition-group label {
+        margin-bottom: 2px;
+    }
+    button {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
 }

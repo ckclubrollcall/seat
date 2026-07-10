@@ -3,107 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>排座位終結者</title>
+    <title>排座位終結者 - 智能座位分配系統</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <h1>排座位終結者</h1>
+    <div class="subtitle">自動化班級座位配置與偏好媒合工具</div>
+
+    <!-- 階段 I: 教室與學生座號設定 -->
     <section id="setup-page" class="page-section">
         <h2>階段 I: 教室與學生座號設定</h2>
         <p>基本上是很少有老師會瘋到讓班長排座位啦，但班長不想要把責任都丟在自己身上，所以就做了這東西。</p>
-        <p>身為一個高一資訊科技課被當掉的文組生，以下所以程式都是AI寫的，我只是給個想法然後安裝。</p>
-        <p>建國中學79屆201 王宥鈞(2025.10.17)。</p>
-        <div class="form-group">
+        <p>身為一個高一資訊科技課被當掉的文組生，以下所有程式都是AI寫的，我只是給個想法然後安裝。</p>
+        <p>建國中學79屆201 王宥鈞 (2025.10.17)。</p>
+        
+        <div class="form-group" style="margin-top: 25px;">
             <label for="class-name">班級名稱:</label>
-            <input type="text" id="class-name" placeholder="例如: 高一201班">
+            <input type="text" id="class-name" placeholder="例如: 建中201班">
         </div>
-            <div id="error-message" class="error-msg"></div>
-        <div class="form-group">
-            <label for="rows">教室排數 (前後):</label>
-            <input type="number" id="rows" min="1" value="5">
+        
+        <div id="error-message" class="error-msg"></div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="rows">教室排數 (前後):</label>
+                <input type="number" id="rows" min="1" value="5">
+            </div>
+            <div class="form-group">
+                <label for="cols">教室列數 (左右):</label>
+                <input type="number" id="cols" min="1" value="6">
+            </div>
         </div>
-        <div class="form-group">
-            <label for="cols">教室列數 (左右):</label>
-            <input type="number" id="cols" min="1" value="6">
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="min-id">學生最小座號:</label>
+                <input type="number" id="min-id" min="1" value="1">
+            </div>
+            <div class="form-group">
+                <label for="max-id">學生最大座號:</label>
+                <input type="number" id="max-id" value="30">
+            </div>
         </div>
-        <div class="form-group">
-            <label for="min-id">學生最小座號:</label>
-            <input type="number" id="min-id" min="1" value="1">
-        </div>
-        <div class="form-group">
-            <label for="max-id">學生最大座號:</label>
-            <input type="number" id="max-id" value="30">
-        </div>
+        
         <div class="form-group">
             <label for="excluded-ids">需排除的座號 (以逗號分隔, 如: 4,7,29):</label>
             <input type="text" id="excluded-ids" placeholder="無則留空">
         </div>
-        <button onclick="startStudentInput()">開始學生輸入</button>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-color); display: flex; flex-wrap: wrap; gap: 10px;">
+            <button onclick="startStudentInput()" class="btn-primary">線下模式 (同一台電腦輪流填)</button>
+            <button onclick="createOnlineRoom()" class="btn-success">建立線上房間 (管理員)</button>
+        </div>
+
+        <div id="join-room-section">
+            <h3>學生加入房間</h3>
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="room-code">輸入 6 碼房間代碼:</label>
+                <input type="text" id="room-code" placeholder="例如: A1B2C3" style="text-transform: uppercase;">
+            </div>
+            <button onclick="joinRoom()" class="btn-info">加入房間填寫條件</button>
+        </div>
     </section>
 
+    <!-- 階段 II: 線上收集學生資料 (等待頁面) -->
+    <section id="admin-waiting-page" class="page-section hidden">
+        <h2>階段 II: 線上收集學生資料</h2>
+        <p>請讓學生在首頁輸入下方房間代碼加入房間並填寫偏好：</p>
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+            <span class="room-code-badge" id="display-room-code"></span>
+            <button onclick="copyRoomCode()" class="btn-info" style="margin-top: 0;">複製代碼</button>
+        </div>
+        <p>目前已提交資料人數: <b style="color: var(--primary-color); font-size: 1.1rem;"><span id="online-student-status">0 / ?</span></b></p>
+        <ul id="submitted-students-list"></ul>
+        <button onclick="finishOnlineCollection()" class="btn-warning">收集完畢，生成座位表</button>
+    </section>
+
+    <!-- 階段 II: 學生條件輸入 -->
     <section id="input-page" class="page-section hidden">
         <h2>階段 II: 學生條件輸入</h2>
-        <p>目前輸入學生: <span id="current-student-status">1 / ?</span></p>
+        <p id="student-status-wrapper">目前輸入學生: <span id="current-student-status" style="font-weight: bold; color: var(--primary-color);">1 / ?</span></p>
 
         <div id="student-form-container">
-            <div class="form-group">
-                <label for="student-id">輸入你的座號:</label>
-                <input type="number" id="student-id" min="1">
-            </div>
-            <div class="form-group">
-                <label for="student-name">輸入你的姓名:</label>
-                <input type="text" id="student-name">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="student-id">輸入你的座號:</label>
+                    <input type="number" id="student-id" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="student-name">輸入你的姓名 (選填):</label>
+                    <input type="text" id="student-name" placeholder="例如: 王小明">
+                </div>
             </div>
 
             <fieldset>
-                <legend>六項座位偏好條件</legend>
+                <legend>座位偏好條件 (權重 1-4，數值越大越優先)</legend>
                 <div class="condition-group">
-                    <label>想跟誰坐:</label> <input type="number" class="preference-id" id="pref-1-id">
-                    <label>權重 (1-4):</label> <input type="number" class="weight-input" min="1" max="4" id="pref-1-w">
+                    <label for="pref-1-id">想跟誰坐 (1):</label>
+                    <input type="number" class="preference-id" id="pref-1-id" placeholder="好友座號">
+                    <label for="pref-1-w">權重 (1-4):</label>
+                    <input type="number" class="weight-input" min="1" max="4" id="pref-1-w" placeholder="1-4">
                 </div>
                 <div class="condition-group">
-                    <label>想跟誰坐:</label> <input type="number" class="preference-id" id="pref-2-id">
-                    <label>權重 (1-4):</label> <input type="number" class="weight-input" min="1" max="4" id="pref-2-w">
+                    <label for="pref-2-id">想跟誰坐 (2):</label>
+                    <input type="number" class="preference-id" id="pref-2-id" placeholder="好友座號">
+                    <label for="pref-2-w">權重 (1-4):</label>
+                    <input type="number" class="weight-input" min="1" max="4" id="pref-2-w" placeholder="1-4">
                 </div>
                 <div class="condition-group">
-                    <label>想坐前後:</label>
+                    <label for="pref-5-val">想坐前後:</label>
                     <select id="pref-5-val">
                         <option value="不限">不限</option>
-                        <option value="前">前面</option>
-                        <option value="中">中間</option>
-                        <option value="後">後面</option>
+                        <option value="前">前面 (靠講台)</option>
+                        <option value="中">中間 (教室中央)</option>
+                        <option value="後">後面 (靠後門)</option>
                     </select>
-                    <label>權重 (1-4):</label> <input type="number" class="weight-input" min="1" max="4" id="pref-5-w">
+                    <label for="pref-5-w">權重 (1-4):</label>
+                    <input type="number" class="weight-input" min="1" max="4" id="pref-5-w" placeholder="1-4">
                 </div>
                 <div class="condition-group">
-                    <label>想坐左右:</label>
+                    <label for="pref-6-val">想坐左右:</label>
                     <select id="pref-6-val">
                         <option value="不限">不限</option>
-                        <option value="左">左邊</option>
+                        <option value="左">左邊 (靠窗/走廊)</option>
                         <option value="中">中間</option>
-                        <option value="右">右邊</option>
+                        <option value="右">右邊 (靠窗/走廊)</option>
                     </select>
-                    <label>權重 (1-4):</label> <input type="number" class="weight-input" min="1" max="4" id="pref-6-w">
+                    <label for="pref-6-w">權重 (1-4):</label>
+                    <input type="number" class="weight-input" min="1" max="4" id="pref-6-w" placeholder="1-4">
                 </div>
             </fieldset>
 
-            <button onclick="submitStudentPreferences()">確認輸入</button>
+            <button onclick="submitStudentPreferences()" class="btn-primary" style="width: 100%; margin-top: 10px;">確認送出</button>
         </div>
     </section>
 
-<section id="result-page" class="page-section hidden">
-    <h2>階段 III: 座位分配結果</h2>
-    <p>分配依據: 權重高 > 隨機判定。<b>(提示: 可拖曳座位方塊來交換學生位置)</b></p>
-    
-    <div id="seat-map-container">
+    <!-- 階段 III: 座位分配結果 -->
+    <section id="result-page" class="page-section hidden">
+        <h2>階段 III: 座位分配結果</h2>
+        <p>分配依據: 權重高 > 隨機判定。<b>(提示: 可拖曳座位方塊來交換學生位置或移至空位)</b></p>
+        
+        <!-- 講台指示 -->
+        <div id="podium-container">
+            <div class="podium">講台 (前方)</div>
         </div>
-            <button onclick="distributeSeats()" id="redistribute-btn">重新分配</button>
-    <button onclick="downloadDoc()" id="download-btn">下載為 DOC 檔案</button>
-</section>
 
-    <script src="script.js"></script>
+        <div id="seat-map-container">
+            <!-- 動態生成座位表 -->
+        </div>
+        
+        <div style="margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px;">
+            <button onclick="distributeSeats()" id="redistribute-btn" class="btn-primary">重新分配</button>
+            <button onclick="downloadDoc()" id="download-btn" class="btn-success">下載為 DOC 檔案</button>
+        </div>
+    </section>
+
+    <!-- 引入 Firebase 核心套件與 Firestore -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Firebase 設定
+        const firebaseConfig = {
+            apiKey: "AIzaSyC-3jsWffEu_0GbljaLUY75J43Bh6tYArU",
+            authDomain: "seat-6ed72.firebaseapp.com",
+            projectId: "seat-6ed72",
+            storageBucket: "seat-6ed72.firebasestorage.app",
+            messagingSenderId: "81985550023",
+            appId: "1:81985550023:web:ce90f6606b1ca7e9d0f0e2",
+        };
+
+        // 初始化 Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // 將 db 綁定到 window 上，讓你的 script.js 可以使用
+        window.db = db;
+    </script>
+
+    <!-- 引入主邏輯腳本 -->
+    <script src="script.js" type="module"></script>
+
+    <div class="footer-info">
+        <p>聯絡電話: 0900737183 &nbsp;|&nbsp; 電子郵件: ck.ycwang0508@gmail.com</p>
+    </div>
 </body>
-<p>連絡電話: 0900737183  電子郵件: ck.ycwang0508@gmail.com</p>
-
 </html>
