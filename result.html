@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>座位分配結果 — 換個座位</title>
+    <meta name="description" content="查看班級座位分配結果，可拖曳調整座位，並下載為 Word 檔案。">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>換個座位</h1>
+    <div class="subtitle">依照學生要求畫出最合適的座位表</div>
+
+    <!-- 座位分配結果 -->
+    <section id="result-page" class="page-section page-enter">
+        <h2>座位分配結果</h2>
+        <p>分配依據: 偏好權重高者優先 > 隨機判定</p>
+        <p><b>(提示: 可拖曳座位方塊來交換學生位置或移至空位)</b></p>
+
+        <!-- 講台指示 -->
+        <div id="podium-container">
+            <div class="podium">講台</div>
+        </div>
+
+        <div id="seat-map-container">
+            <!-- 動態生成座位表 -->
+        </div>
+
+        <!-- 演算法模式智慧推薦卡片 -->
+        <div id="mode-recommendation" class="mode-recommendation hidden">
+            <div class="mode-recommendation-icon">🔬</div>
+            <div class="mode-recommendation-text">
+                <div class="mode-recommendation-title">自動推薦：<span id="recommend-mode-label"></span></div>
+                <div class="mode-recommendation-reason" id="recommend-mode-reason"></div>
+            </div>
+            <button onclick="applyRecommendedMode()" class="btn-info mode-recommendation-btn">套用並重新分配</button>
+        </div>
+
+        <div style="margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+            <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 8px;">
+                <label for="algo-mode" style="margin-bottom: 0;">演算法模式:</label>
+                <select id="algo-mode" style="width: auto; padding: 8px 16px;">
+                    <option value="balanced" selected>平衡模式</option>
+                    <option value="max_score">最大滿意</option>
+                    <option value="fairness">公平優先</option>
+                </select>
+            </div>
+
+            <button onclick="distributeSeats()" id="redistribute-btn" class="btn-primary">重新分配</button>
+            <button onclick="downloadDoc()" id="download-btn" class="btn-success">下載為 DOC 檔案</button>
+        </div>
+    </section>
+
+    <div class="footer-info">
+        <p>換個座位 · 自動化座位配置工具</p>
+    </div>
+
+    <script src="result.js" type="module"></script>
+</body>
+</html>

@@ -3,267 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>排座位終結者 - 智能座位分配系統</title>
+    <title>換個座位</title>
+    <meta name="description" content="依照學生需求，用模擬退火演算法自動生成最合適的班級座位表。支援線上收集與線下輪流輸入兩種模式。">
     <link rel="stylesheet" href="style.css">
-    <!-- 引入 QRCode.js 套件 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
-    <h1>排座位終結者</h1>
-    <div class="subtitle">依照座位偏好自動媒合出最合適的班級座位表</div>
+    <h1>換個座位</h1>
+    <div class="subtitle">依照學生要求畫出最合適的座位表</div>
 
     <!-- 首頁：選擇使用方式 -->
-    <section id="landing-page" class="page-section">
-        <h2>開始使用</h2>
+    <section id="landing-page" class="page-section page-enter">
+        <h2>首頁</h2>
         <p>選擇最適合你的方式：讓全班同時上線填寫，或是用同一台電腦輪流輸入。</p>
 
         <div class="landing-options">
-            <div class="landing-btn create" onclick="goToSetup('onlineCreate')">
-                <div class="icon">🛰️</div>
-                <div class="title">建立線上房間</div>
-                <div class="desc">產生房間代碼，讓學生用自己的裝置上線填寫偏好</div>
+            <div class="landing-btn create" id="btn-create" role="button" tabindex="0" aria-label="建立房間">
+                <div class="icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>
+                </div>
+                <div class="title">建立房間</div>
+                <div class="desc">產生房間代碼，學生用自己的裝置上線填寫偏好</div>
             </div>
-            <div class="landing-btn join" onclick="showJoinRoomPage()">
-                <div class="icon">🔑</div>
+            <div class="landing-btn join" id="btn-join" role="button" tabindex="0" aria-label="加入房間">
+                <div class="icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M10 14 21 3M9 21H3v-6M3 21l7-7"/></svg>
+                </div>
                 <div class="title">加入房間</div>
                 <div class="desc">輸入老師提供的房間代碼，填寫你自己的座位偏好</div>
             </div>
-            <div class="landing-btn offline" onclick="goToSetup('offline')">
-                <div class="icon">🖥️</div>
-                <div class="title">線下模式</div>
+            <div class="landing-btn offline" id="btn-offline" role="button" tabindex="0" aria-label="線下操作">
+                <div class="icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 4V2M16 4V2M3 10h18"/></svg>
+                </div>
+                <div class="title">線下操作</div>
                 <div class="desc">用同一台電腦，讓全班同學輪流輸入偏好資料</div>
             </div>
         </div>
 
-        <div id="error-message" class="error-msg"></div>
-    </section>
-
-    <!-- 加入房間 -->
-    <section id="join-room-page" class="page-section hidden">
-        <h2>加入房間</h2>
-        <p>輸入老師提供的 6 碼房間代碼，加入班級並填寫你的座位偏好。</p>
-
-        <div class="join-box">
+        <!-- 加入房間輸入框（隱藏，點選「加入房間」後展開） -->
+        <div id="join-box" class="join-box hidden" style="margin-top: 24px;">
             <div class="form-group" style="margin-bottom: 15px;">
                 <label for="room-code">房間代碼:</label>
                 <input type="text" id="room-code" placeholder="例如: A1B2C3" style="text-transform: uppercase;">
             </div>
-            <button onclick="joinRoom()" class="btn-info">加入房間</button>
-            <button onclick="backToLanding()" class="btn-secondary">返回</button>
+            <button onclick="doJoinRoom()" class="btn-info">加入</button>
+            <button onclick="hideJoinBox()" class="btn-secondary">取消</button>
+        </div>
+
+        <!-- 演算法說明連結 -->
+        <div style="margin-top: 28px; text-align: center;">
+            <a href="algorithm.html" class="algo-link" id="algo-link-btn">
+                <span>🔬</span> 了解演算法如何運作
+            </a>
         </div>
     </section>
-
-    <!-- 教室設定 -->
-    <section id="setup-page" class="page-section hidden">
-        <h2>教室設定</h2>
-        <p>先告訴我們班級名稱和教室的排列方式，接著就能標出實際可以坐人的座位。</p>
-
-        <div class="form-group">
-            <label for="class-name">班級名稱:</label>
-            <input type="text" id="class-name" placeholder="例如: 201班">
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label for="rows">教室排數 (前後):</label>
-                <input type="number" id="rows" min="1" value="5">
-            </div>
-            <div class="form-group">
-                <label for="cols">教室列數 (左右):</label>
-                <input type="number" id="cols" min="1" value="6">
-            </div>
-        </div>
-
-        <div style="margin-top: 20px;">
-            <button onclick="goToLayoutConfig()" class="btn-primary">下一步：標記座位</button>
-            <button onclick="backToLanding()" class="btn-secondary">返回</button>
-        </div>
-    </section>
-
-    <!-- 座位配置：點擊切換啟用/停用 -->
-    <section id="layout-config-page" class="page-section hidden">
-        <h2>座位配置</h2>
-        <p>下方依教室排列畫出所有座位。點擊座位可以切換「不坐人」的空位（例如走道、講桌旁），其餘座位皆會用來分配學生。</p>
-
-        <div class="layout-config-legend">
-            <span><span class="legend-swatch active-swatch"></span>可分配座位</span>
-            <span><span class="legend-swatch inactive-swatch"></span>不坐人（點擊切換）</span>
-            <span>目前可用座位：<span class="seat-count-badge" id="active-seat-count">0</span> / <span id="total-seat-count">0</span></span>
-        </div>
-
-        <div id="layout-config-container"></div>
-
-        <div style="margin-top: 25px;">
-            <button onclick="confirmLayoutConfig()" class="btn-primary" id="layout-confirm-btn">確認座位配置</button>
-            <button onclick="backToSetup()" class="btn-secondary">上一步</button>
-        </div>
-    </section>
-
-    <!-- 線上收集學生資料：管理員等待畫面 -->   
-    <section id="admin-waiting-page" class="page-section hidden">
-        <h2>等待學生填寫</h2>
-        <p>把下方房間代碼或 QR Code 交給學生，讓他們加入房間填寫偏好：</p>
-        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-            <span class="room-code-badge" id="display-room-code"></span>
-            <button onclick="copyRoomCode()" class="btn-info" style="margin-top: 0;">複製代碼</button>
-        </div>
-        
-        <!-- 新增 QR Code 顯示區塊 -->
-        <div id="qrcode-container" style="margin-bottom: 20px; padding: 15px; background: white; display: inline-block; border-radius: 10px; border: 1px solid var(--border-color);"></div>
-
-        <p>目前已提交資料人數: <b style="color: var(--primary-color); font-size: 1.1rem;"><span id="online-student-status">0 / ?</span></b></p>
-        <ul id="submitted-students-list"></ul>
-        <button onclick="finishOnlineCollection()" class="btn-warning">收集完畢，生成座位表</button>
-    </section>
-
-    <!-- 學生條件輸入 -->
-    <section id="input-page" class="page-section hidden">
-        <h2>填寫座位偏好</h2>
-        <p id="student-status-wrapper">目前輸入學生: <span id="current-student-status" style="font-weight: bold; color: var(--primary-color);">1 / ?</span></p>
-
-        <div id="student-form-container">
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="student-id">你的座號:</label>
-                    <input type="number" id="student-id" min="1">
-                </div>
-                <div class="form-group">
-                    <label for="student-name">你的姓名 (選填):</label>
-                    <input type="text" id="student-name" placeholder="例如: 王小明">
-                </div>
-            </div>
-
-            <fieldset>
-                <legend>座位偏好條件（電腦可按住 ≡ 拖曳，手機請用 ▲▼ 調整順序，越上面越重要）</legend>
-                <div id="condition-list">
-                    <!-- 條件 1 -->
-                    <div class="condition-group" draggable="true">
-                        <div class="drag-handle">≡</div>
-                        <div class="reorder-buttons">
-                            <button type="button" class="reorder-btn" onclick="moveConditionUp(this)" aria-label="上移">▲</button>
-                            <button type="button" class="reorder-btn" onclick="moveConditionDown(this)" aria-label="下移">▼</button>
-                        </div>
-                        <label for="pref-1-id">想跟誰坐 (1):</label>
-                        <input type="number" class="preference-id" id="pref-1-id" placeholder="好友座號">
-                    </div>
-                    
-                    <!-- 條件 2 -->
-                    <div class="condition-group" draggable="true">
-                        <div class="drag-handle">≡</div>
-                        <div class="reorder-buttons">
-                            <button type="button" class="reorder-btn" onclick="moveConditionUp(this)" aria-label="上移">▲</button>
-                            <button type="button" class="reorder-btn" onclick="moveConditionDown(this)" aria-label="下移">▼</button>
-                        </div>
-                        <label for="pref-2-id">想跟誰坐 (2):</label>
-                        <input type="number" class="preference-id" id="pref-2-id" placeholder="好友座號">
-                    </div>
-                    
-                    <!-- 條件 3 -->
-                    <div class="condition-group" draggable="true">
-                        <div class="drag-handle">≡</div>
-                        <div class="reorder-buttons">
-                            <button type="button" class="reorder-btn" onclick="moveConditionUp(this)" aria-label="上移">▲</button>
-                            <button type="button" class="reorder-btn" onclick="moveConditionDown(this)" aria-label="下移">▼</button>
-                        </div>
-                        <label for="pref-5-val">想坐前後:</label>
-                        <select id="pref-5-val">
-                            <option value="不限">不限</option>
-                            <option value="前">前面 (靠講台)</option>
-                            <option value="中">中間 (教室中央)</option>
-                            <option value="後">後面 (靠後門)</option>
-                        </select>
-                    </div>
-                    
-                    <!-- 條件 4 -->
-                    <div class="condition-group" draggable="true">
-                        <div class="drag-handle">≡</div>
-                        <div class="reorder-buttons">
-                            <button type="button" class="reorder-btn" onclick="moveConditionUp(this)" aria-label="上移">▲</button>
-                            <button type="button" class="reorder-btn" onclick="moveConditionDown(this)" aria-label="下移">▼</button>
-                        </div>
-                        <label for="pref-6-val">想坐左右:</label>
-                        <select id="pref-6-val">
-                            <option value="不限">不限</option>
-                            <option value="左">左邊 (靠窗/走廊)</option>
-                            <option value="中">中間</option>
-                            <option value="右">右邊 (靠窗/走廊)</option>
-                        </select>
-                    </div>
-                </div>
-            </fieldset>
-
-            <button onclick="submitStudentPreferences()" class="btn-primary" style="width: 100%; margin-top: 10px;">確認送出</button>
-        </div>
-    </section>
-
-    <!-- 座位分配結果 -->
-    <section id="result-page" class="page-section hidden">
-        <h2>座位分配結果</h2>
-        <p>分配依據: 偏好權重高者優先 > 隨機判定。<b>(提示: 可拖曳座位方塊來交換學生位置或移至空位)</b></p>
-
-        <!-- 講台指示 -->
-        <div id="podium-container">
-            <div class="podium">講台 (前方)</div>
-        </div>
-
-        <div id="seat-map-container">
-            <!-- 動態生成座位表 -->
-        </div>
-
-        <div id="mode-recommendation" class="mode-recommendation hidden">
-            <div class="mode-recommendation-icon">💡</div>
-            <div class="mode-recommendation-text">
-                <div class="mode-recommendation-title">系統建議：<span id="recommend-mode-label"></span></div>
-                <div class="mode-recommendation-reason" id="recommend-mode-reason"></div>
-            </div>
-            <button onclick="applyRecommendedMode()" class="btn-info mode-recommendation-btn">套用建議並重新分配</button>
-        </div>
-
-        <div style="margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
-            
-            <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 8px;">
-                <label for="algo-mode" style="margin-bottom: 0;">演算法模式:</label>
-                <select id="algo-mode" style="width: auto; padding: 8px 16px;">
-                    <option value="balanced" selected>⚖️ 平衡模式 (預設)</option>
-                    <option value="max_score">🔥 最大滿意度</option>
-                    <option value="fairness">🤝 公平優先</option>
-                </select>
-            </div>
-
-            <button onclick="distributeSeats()" id="redistribute-btn" class="btn-primary">重新分配</button>
-            <button onclick="downloadDoc()" id="download-btn" class="btn-success">下載為 DOC 檔案</button>
-        </div>
-    </section>
-
-    <!-- 引入 Firebase 核心套件與 Firestore -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        // Firebase 設定
-        const firebaseConfig = {
-            apiKey: "AIzaSyAd5J6KhvEaNGg-RG55m3Ug1EC1VRNjwY0",
-            authDomain: "seat-ea9a2.firebaseapp.com",
-            projectId: "seat-ea9a2",
-            storageBucket: "seat-ea9a2.firebasestorage.app",
-            messagingSenderId: "948717447392",
-            appId: "1:948717447392:web:aa05f4fc44130f15258885"
-        };
-
-        // 初始化 Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // 將 db 綁定到 window 上，讓你的 script.js 可以使用
-        window.db = db;
-    </script>
-
-    <!-- 引入主邏輯腳本 -->
-    <script src="script.js" type="module"></script>
 
     <div class="footer-info">
-        <p>排座位終結者 · 自動化座位配置工具</p>
+        <p>換個座位 · 自動化座位配置工具</p>
     </div>
+
+    <script src="index.js" type="module"></script>
 </body>
 </html>

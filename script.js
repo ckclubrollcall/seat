@@ -603,9 +603,9 @@ function evaluateSystem(allStudents) {
    ========================================================= */
 
 const ALGO_MODE_LABELS = {
-    balanced: '⚖️ 平衡模式',
-    max_score: '🔥 最大滿意度',
-    fairness: '🤝 公平優先'
+    balanced: '平衡模式',
+    max_score: '最大滿意',
+    fairness: '公平優先'
 };
 
 /**

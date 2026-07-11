@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>演算法說明 — 換個座位</title>
+    <meta name="description" content="了解「換個座位」如何透過模擬退火演算法，依照學生偏好計算出最佳座位分配。">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* ── 演算法說明頁專屬樣式 ── */
+        .algo-section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 32px 36px;
+            margin-top: 20px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid rgba(255,255,255,0.8);
+        }
+
+        .algo-section h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent-deep);
+            border-left: 4px solid var(--primary-color);
+            padding-left: 12px;
+            margin-bottom: 16px;
+        }
+
+        .algo-section p, .algo-section li {
+            color: var(--text-secondary);
+            font-size: 0.96rem;
+            line-height: 1.8;
+        }
+
+        .algo-section ul, .algo-section ol {
+            margin: 12px 0 12px 20px;
+        }
+
+        .algo-section li {
+            margin-bottom: 8px;
+        }
+
+        /* 流程圖 */
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+
+        .flow-step {
+            background: var(--primary-light);
+            border: 1.5px solid var(--primary-color);
+            border-radius: 10px;
+            padding: 10px 18px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-deep);
+            text-align: center;
+            min-width: 110px;
+        }
+
+        .flow-arrow {
+            font-size: 1.4rem;
+            color: var(--primary-color);
+            flex-shrink: 0;
+        }
+
+        /* 公式卡片 */
+        .formula-card {
+            background: linear-gradient(135deg, var(--primary-pale) 0%, var(--primary-light) 100%);
+            border: 1px solid var(--border-focus);
+            border-radius: 12px;
+            padding: 18px 24px;
+            margin: 16px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.92rem;
+            color: var(--text-primary);
+            line-height: 2;
+        }
+
+        .formula-card .formula-label {
+            font-family: var(--font-family);
+            font-weight: 600;
+            color: var(--accent-deep);
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+        }
+
+        /* 模式比較表 */
+        .mode-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 0.9rem;
+        }
+
+        .mode-table th {
+            background: var(--primary-pale);
+            color: var(--accent-deep);
+            font-weight: 600;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .mode-table td {
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            vertical-align: top;
+        }
+
+        .mode-table tr:nth-child(even) td {
+            background: #fafbfc;
+        }
+
+        /* 分隔線 */
+        .algo-divider {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            margin: 8px 0 24px;
+        }
+
+        /* 返回按鈕 */
+        .back-btn-wrap {
+            text-align: center;
+            margin-top: 32px;
+        }
+
+        /* 亮點文字 */
+        .highlight {
+            color: var(--accent-deep);
+            font-weight: 600;
+        }
+
+        /* 步驟編號 */
+        .step-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-right: 8px;
+            flex-shrink: 0;
+            vertical-align: middle;
+        }
+
+        @media (max-width: 600px) {
+            .algo-section { padding: 20px 16px; }
+            .flow-diagram { flex-direction: column; align-items: flex-start; }
+            .flow-arrow { transform: rotate(90deg); align-self: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>換個座位</h1>
+    <div class="subtitle">依照學生要求畫出最合適的座位表</div>
+
+    <!-- 介紹 -->
+    <div class="algo-section page-enter">
+        <h2>🔬 演算法說明</h2>
+        <p>
+            「換個座位」不是隨機抽籤，而是透過<span class="highlight">模擬退火演算法（Simulated Annealing）</span>，
+            在數萬次嘗試中找出讓全班滿意度最高的座位排列。
+            整體分為三個階段：
+        </p>
+
+        <div class="flow-diagram">
+            <div class="flow-step">📋<br>收集偏好</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">📐<br>計算滿意度</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">🔥<br>模擬退火<br>最佳化</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">🪑<br>輸出座位表</div>
+        </div>
+    </div>
+
+    <!-- 第一步：收集偏好 -->
+    <div class="algo-section">
+        <h2><span class="step-badge">1</span>收集偏好</h2>
+        <hr class="algo-divider">
+        <p>每位學生最多可填寫四種偏好條件，<span class="highlight">排在前面的條件自動獲得更高的優先權</span>（權重從 4 往下遞減）：</p>
+        <ul>
+            <li><b>想跟誰坐（可填兩位）：</b>希望和哪位同學坐鄰近位置（包含斜對角）。</li>
+            <li><b>前後偏好：</b>希望坐在教室的前區、中區或後區。</li>
+            <li><b>左右偏好：</b>希望坐在教室的左側、中間或右側。</li>
+        </ul>
+        <p>若學生沒有填寫某個條件，代表「不限」，該條件的權重為 0，不影響分配。</p>
+    </div>
+
+    <!-- 第二步：計算滿意度 -->
+    <div class="algo-section">
+        <h2><span class="step-badge">2</span>計算滿意度分數</h2>
+        <hr class="algo-divider">
+        <p>
+            演算法對每位學生計算三項分數，加總後得到該學生的<span class="highlight">個人總分</span>：
+        </p>
+
+        <div class="formula-card">
+            <div class="formula-label">① 前後方位分數（連續計分）</div>
+            ratio = 距離目標區越近 → 越接近 1.0<br>
+            fbScore = ratio × 偏好權重 × 50
+        </div>
+
+        <div class="formula-card">
+            <div class="formula-label">② 左右方位分數（連續計分）</div>
+            ratio = 距離目標欄越近 → 越接近 1.0<br>
+            lrScore = ratio × 偏好權重 × 50
+        </div>
+
+        <div class="formula-card">
+            <div class="formula-label">③ 好友距離分數</div>
+            dist = max(列差, 排差)　　← 切比雪夫距離<br>
+            ratio = max(0,  1 − (dist − 1) × 0.25)<br>
+            frScore += ratio × 好友權重 × 50
+        </div>
+
+        <p style="margin-top: 12px;">
+            其中 <b>ratio = 1.0</b> 代表完全達成偏好（例如：和好友緊鄰，或剛好坐在最前排）；
+            <b>ratio = 0.0</b> 代表完全相反。
+            乘以 50 是為了讓三種偏好在分數上等權，避免哪類偏好被忽視。
+        </p>
+    </div>
+
+    <!-- 第三步：模擬退火 -->
+    <div class="algo-section">
+        <h2><span class="step-badge">3</span>模擬退火最佳化</h2>
+        <hr class="algo-divider">
+        <p>
+            模擬退火是一種<span class="highlight">受物理淬火啟發的最佳化演算法</span>。
+            就像金屬冷卻時原子會慢慢找到能量最低的穩定排列，演算法也會逐步搜尋讓全班總滿意度最高的座位安排。
+        </p>
+        <ol>
+            <li><b>初始隨機分配：</b>先把所有學生隨機打散到各可用座位。</li>
+            <li><b>持續嘗試改進（共 5 萬次迭代）：</b>每次隨機挑選一位學生，試著把他移到另一個位置（或與另一位學生交換）。</li>
+            <li><b>接受判定：</b>
+                <ul>
+                    <li>若交換後分數 <b>提升</b>（或持平）：<span class="highlight">100% 接受</span>。</li>
+                    <li>若交換後分數 <b>下降</b>：以一定機率接受（機率隨溫度降低而下降）。
+                        這樣能跳脫局部最佳，避免卡死。</li>
+                </ul>
+            </li>
+            <li><b>溫度冷卻：</b>初始溫度 500，依指數冷卻率逐漸降至 1，讓後期幾乎只接受改進方案。</li>
+        </ol>
+
+        <div class="formula-card">
+            <div class="formula-label">接受機率（分數下降時）</div>
+            P(接受) = exp( ΔScore / Temperature )
+        </div>
+
+        <p>
+            整個最佳化過程在毫秒至數秒內完成（視班級規模而定），
+            最後保留最佳結果並繪製座位表。
+        </p>
+    </div>
+
+    <!-- 演算法模式說明 -->
+    <div class="algo-section">
+        <h2>⚙️ 三種演算法模式</h2>
+        <hr class="algo-divider">
+        <p>你可以在結果頁切換「演算法模式」，影響的是演算法的<span class="highlight">目標函式</span>（也就是「評分標準」）：</p>
+
+        <table class="mode-table">
+            <thead>
+                <tr>
+                    <th>模式</th>
+                    <th>目標函式</th>
+                    <th>適合情境</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><b>平衡模式</b>（預設）</td>
+                    <td><code>(平均分 − 標準差 × 0.5) × 人數</code></td>
+                    <td>大多數班級的通用選擇，兼顧總分與公平。</td>
+                </tr>
+                <tr>
+                    <td><b>最大滿意</b></td>
+                    <td><code>全班總分（加總）</code></td>
+                    <td>偏好集中、衝突少的班級；或有大量學生無特別偏好。</td>
+                </tr>
+                <tr>
+                    <td><b>公平優先</b></td>
+                    <td><code>(平均分 − 標準差 × 0.9) × 人數</code></td>
+                    <td>有人偏好強烈、有人幾乎不填；或有學生被多人高權重指名。</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p>
+            系統也會依填答狀況<span class="highlight">自動分析並推薦最適合的模式</span>，你可以選擇直接套用，或手動調整。
+        </p>
+    </div>
+
+    <!-- 自動推薦說明 -->
+    <div class="algo-section">
+        <h2>🤖 智慧推薦邏輯</h2>
+        <hr class="algo-divider">
+        <p>系統在生成座位表前，會分析全班填答狀況並依下列規則建議模式：</p>
+        <ol>
+            <li>若<b>全班都沒有填寫偏好</b>→ 平衡模式（怎麼坐都一樣）</li>
+            <li>若<b>有填的人平均需求強度 &lt; 1.5</b>→ 平衡模式（偏好普遍輕微）</li>
+            <li>若有<b>同學被 3 人以上高權重指名</b>（座位肯定不夠分）→ 公平優先</li>
+            <li>若有填的人之間<b>需求落差大（變異係數 &gt; 0.6）</b>→ 公平優先</li>
+            <li>若需求<b>集中且一致（變異係數 &lt; 0.35，平均需求 ≥ 2）</b>→ 最大滿意</li>
+            <li>其餘情況 → 平衡模式</li>
+        </ol>
+    </div>
+
+    <!-- 返回按鈕 -->
+    <div class="back-btn-wrap">
+        <a href="index.html" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none; padding: 12px 28px; border-radius: 10px; font-size: 0.95rem; font-weight: 500; color: white; background: var(--primary-color);">
+            ← 回到首頁
+        </a>
+    </div>
+
+    <div class="footer-info">
+        <p>換個座位 · 自動化座位配置工具</p>
+    </div>
+
+</body>
+</html>

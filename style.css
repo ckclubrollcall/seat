@@ -169,7 +169,40 @@ h1 {
 .landing-btn.join:hover { border-color: var(--accent-soft-hover); }
 .landing-btn.offline:hover { border-color: var(--accent-slate); }
 
-/* 表單元件設計 */
+/* 演算法說明連結按鈕 */
+.algo-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.22s ease;
+    background: transparent;
+}
+
+.algo-link:hover {
+    border-color: var(--primary-color);
+    color: var(--accent-deep);
+    background: var(--primary-light);
+    transform: translateY(-1px);
+}
+
+/* 加入房間展開框 */
+.join-box {
+    margin-top: 10px;
+    padding: 24px;
+    background-color: var(--primary-light);
+    border-radius: 14px;
+    border: 1px dashed var(--primary-color);
+    animation: fadeIn 0.25s ease;
+}
+
+
 .form-group {
     margin-bottom: 20px;
 }
@@ -531,18 +564,71 @@ legend {
     font-weight: 600;
 }
 
-/* 錯誤提示 */
-.error-msg {
-    color: var(--error-text);
-    font-weight: 500;
-    font-size: 0.9rem;
-    margin: 15px 0;
-    padding: 12px 16px;
-    background-color: var(--error-bg);
-    border: 1px solid var(--error-border);
-    border-radius: 8px;
-    display: none;
-    animation: fadeIn 0.3s ease;
+/* =========================================================
+   Modal 遮罩元件
+   ========================================================= */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(30, 40, 50, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+
+.modal-overlay.modal-visible {
+    opacity: 1;
+}
+
+.modal-card {
+    background: var(--card-bg);
+    border-radius: 18px;
+    padding: 36px 32px 28px;
+    max-width: 420px;
+    width: calc(100% - 40px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+    text-align: center;
+    transform: translateY(18px) scale(0.97);
+    transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+    opacity: 0;
+}
+
+.modal-card.modal-card-visible {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+}
+
+.modal-icon {
+    font-size: 2.4rem;
+    margin-bottom: 16px;
+    line-height: 1;
+}
+
+.modal-message {
+    font-size: 1rem;
+    color: var(--text-primary);
+    line-height: 1.65;
+    margin-bottom: 26px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.modal-actions button {
+    margin: 0;
+    min-width: 96px;
+    flex: 1;
+    max-width: 160px;
 }
 
 /* 線上等待頁面名單 */
@@ -902,4 +988,18 @@ legend {
     .page-section {
         padding: 16px;
     }
+}
+
+/* 讓首頁按鈕內的圖片自動適應圓框大小 */
+.landing-btn .icon img {
+    width: 60%;  /* 可以自己微調大小 */
+    height: 60%;
+    object-fit: contain; /* 確保圖片不變形 */
+}
+
+/* 讓系統建議的圖示大小正常 */
+.mode-recommendation-icon img {
+    width: 32px; /* 可以自己微調大小 */
+    height: 32px;
+    object-fit: contain;
 }

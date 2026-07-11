@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>等待學生填寫 — 換個座位</title>
+    <meta name="description" content="線上模式：等待學生用房間代碼加入並填寫座位偏好。">
+    <link rel="stylesheet" href="style.css">
+    <!-- QRCode.js 套件（僅此頁需要） -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+    <h1>換個座位</h1>
+    <div class="subtitle">依照學生要求畫出最合適的座位表</div>
+
+    <section id="admin-waiting-page" class="page-section page-enter">
+        <h2>等待學生填寫</h2>
+        <p>把下方房間代碼或 QR Code 交給學生，讓他們加入房間填寫偏好：</p>
+
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+            <span class="room-code-badge" id="display-room-code"></span>
+            <button onclick="copyRoomCode()" class="btn-info" style="margin-top: 0;">複製代碼</button>
+        </div>
+
+        <!-- QR Code 顯示區塊 -->
+        <div id="qrcode-container" style="margin-bottom: 20px; padding: 15px; background: white; display: inline-block; border-radius: 10px; border: 1px solid var(--border-color);"></div>
+
+        <p>目前已提交資料人數: <b style="color: var(--primary-color); font-size: 1.1rem;"><span id="online-student-status">0 / ?</span></b></p>
+        <ul id="submitted-students-list"></ul>
+
+        <button onclick="finishOnlineCollection()" class="btn-warning">收集完畢，生成座位表</button>
+    </section>
+
+    <div class="footer-info">
+        <p>換個座位 · 自動化座位配置工具</p>
+    </div>
+
+    <script src="waiting.js" type="module"></script>
+</body>
+</html>

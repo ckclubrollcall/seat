@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教室設定 — 換個座位</title>
+    <meta name="description" content="設定班級名稱、排列方式，並標記不坐人的座位。">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>換個座位</h1>
+    <div class="subtitle">依照學生要求畫出最合適的座位表</div>
+
+    <!-- 教室基本設定 -->
+    <section id="setup-page" class="page-section page-enter">
+        <h2>教室設定</h2>
+        <p>先告訴我們班級名稱和教室的排列方式，接著就能標出實際可以坐人的座位。</p>
+
+        <div class="form-group">
+            <label for="class-name">班級名稱:</label>
+            <input type="text" id="class-name" placeholder="例如: 201班">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="rows">教室排數 (前後):</label>
+                <input type="number" id="rows" min="1" value="5">
+            </div>
+            <div class="form-group">
+                <label for="cols">教室列數 (左右):</label>
+                <input type="number" id="cols" min="1" value="6">
+            </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <button onclick="goToLayoutConfig()" class="btn-primary">下一步：標記座位</button>
+            <button onclick="goBack()" class="btn-secondary">返回</button>
+        </div>
+    </section>
+
+    <!-- 座位配置：點擊切換啟用/停用 -->
+    <section id="layout-config-page" class="page-section hidden">
+        <h2>座位配置</h2>
+        <p>下方依教室排列畫出所有座位。點擊座位可以切換「不坐人」的空位，其餘座位皆會用來分配學生。</p>
+
+        <div class="layout-config-legend">
+            <span><span class="legend-swatch active-swatch"></span>可分配座位</span>
+            <span><span class="legend-swatch inactive-swatch"></span>不坐人（點擊切換）</span>
+            <span>目前可用座位：<span class="seat-count-badge" id="active-seat-count">0</span> / <span id="total-seat-count">0</span></span>
+        </div>
+
+        <div id="layout-config-container"></div>
+
+        <div style="margin-top: 25px;">
+            <button onclick="confirmLayoutConfig()" class="btn-primary" id="layout-confirm-btn">確認座位配置</button>
+            <button onclick="backToSetup()" class="btn-secondary">上一步</button>
+        </div>
+    </section>
+
+    <div class="footer-info">
+        <p>換個座位 · 自動化座位配置工具</p>
+    </div>
+
+    <script src="setup.js" type="module"></script>
+</body>
+</html>
