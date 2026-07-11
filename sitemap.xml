@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="/download/be75442e9-adb7dd9b9/sitemap.xsl"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <url>
+       <loc>https://seatsystemforclass.onrender.com/</loc>
+       <lastmod>2026-07-11T11:26:05+00:00</lastmod>
+       <changefreq>daily</changefreq>
+       <priority>1.0000</priority>
+  </url>
+  <url>
+       <loc>https://seatsystemforclass.onrender.com/algorithm.html</loc>
+       <lastmod>2026-07-11T11:26:05+00:00</lastmod>
+       <changefreq>daily</changefreq>
+       <priority>0.8000</priority>
+  </url>
+  <url>
+       <loc>https://seatsystemforclass.onrender.com/index.html</loc>
+       <lastmod>2026-07-11T11:26:05+00:00</lastmod>
+       <changefreq>daily</changefreq>
+       <priority>0.6400</priority>
+  </url>
+</urlset>
