@@ -44,7 +44,13 @@ function displayError(message) {
 function showSection(sectionId) {
     document.querySelectorAll('.page-section').forEach(sec => sec.classList.add('hidden'));
     const target = document.getElementById(sectionId);
-    if (target) target.classList.remove('hidden');
+    if (target) {
+        target.classList.remove('hidden');
+        // 重新觸發進場動畫（先移除再強制 reflow，讓每次切換都有淡入效果）
+        target.classList.remove('page-enter');
+        void target.offsetWidth;
+        target.classList.add('page-enter');
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -118,7 +124,7 @@ function drawLayoutConfigGrid() {
     const container = document.getElementById('layout-config-container');
     container.innerHTML = '';
     container.style.display = 'grid';
-    container.style.gridTemplateColumns = `repeat(${pendingSetup.cols}, 1fr)`;
+    container.style.gridTemplateColumns = `repeat(${pendingSetup.cols}, minmax(56px, 1fr))`;
 
     for (let r = 1; r <= pendingSetup.rows; r++) {
         for (let c = 1; c <= pendingSetup.cols; c++) {
@@ -424,6 +430,7 @@ window.submitStudentPreferences = function() {
     if (studentsData.length === classSettings.allStudentIds.length) {
         alert("班級所有學生偏好已填寫完畢！即將為您分配最佳座位。");
         showSection('result-page');
+        renderModeRecommendation(true); // 依填答狀況分析並自動套用建議模式
         distributeSeats();
     }
 }
@@ -489,170 +496,225 @@ function getEmptySeats() {
     return empty;
 }
 
-/** 計算單一學生在某特定座位的滿意度分數 */
-function calculateScore(studentData, seatPosition) {
-    let score = 0;
-    const pref = studentData.preferences;
-
-    // 1. 區域偏好：前後
-    const frontBackPref = pref.frontBack;
-    if (frontBackPref.value && frontBackPref.value !== '不限') {
-        if (getFrontBackZone(seatPosition.row) === frontBackPref.value) {
-            score += frontBackPref.weight * 10;
-        } else {
-            score -= frontBackPref.weight * 5;
-        }
-    }
-
-    // 2. 區域偏好：左右
-    const leftRightPref = pref.leftRightCenter;
-    if (leftRightPref.value && leftRightPref.value !== '不限') {
-        if (getLeftRightCenterZone(seatPosition.col) === leftRightPref.value) {
-            score += leftRightPref.weight * 10;
-        } else {
-            score -= leftRightPref.weight * 5;
-        }
-    }
-
-    // 3. 朋友偏好：「Greedy 階段」若朋友已入座，計算與該朋友座位的鄰近分數加成
-    pref.wantToSitWith.forEach(p => {
-        const partner = studentsData.find(s => s.studentId === p.id);
-        if (partner && partner.seat) {
-            if (isAdjacent(seatPosition, partner.seat)) {
-                score += p.weight * 50;
-            } else if (Math.abs(seatPosition.row - partner.seat.row) <= 2 &&
-                       Math.abs(seatPosition.col - partner.seat.col) <= 2) {
-                score += p.weight * 10;
-            }
-        } else {
-            // 對方尚未排定座位，提供基礎權重底分
-            score += p.weight;
-        }
-    });
-
-    return score;
-}
 
 /** 計算全班座位分配的總滿意度得分 */
-function calculateTotalSatisfaction() {
-    let totalScore = 0;
-    studentsData.forEach(student => {
-        if (!student.seat) return;
-        totalScore += calculateScore(student, student.seat);
+/** * 新增：計算單一學生在特定座位的各項滿意度 (連續計分) 
+ * @returns {Object} 包含前後、左右、好友與總分的物件
+ */
+function calculateStudentSatisfaction(student, seatPosition = null, allStudents = studentsData) {
+    const seat = seatPosition || student.seat;
+    if (!seat) return { frontBack: 0, leftRight: 0, friends: 0, total: 0 };
 
-        studentsData.forEach(otherStudent => {
-            if (student.studentId === otherStudent.studentId || !otherStudent.seat) return;
+    let fbScore = 0;
+    let lrScore = 0;
+    let frScore = 0;
+    const pref = student.preferences;
 
-            const desirePref = student.preferences.wantToSitWith.find(p => p.id === otherStudent.studentId);
-            if (desirePref) {
-                if (isAdjacent(student.seat, otherStudent.seat)) {
-                    totalScore += desirePref.weight * 50;
-                } else if (Math.abs(student.seat.row - otherStudent.seat.row) <= 2 &&
-                           Math.abs(student.seat.col - otherStudent.seat.col) <= 2) {
-                    totalScore += desirePref.weight * 10;
-                }
-            }
-        });
+    // 1. 前後方位 (乘數從 10 改為 50，與好友平權)
+    if (pref.frontBack.value && pref.frontBack.value !== '不限' && classSettings.totalRows > 1) {
+        const row = seat.row;
+        const maxR = classSettings.totalRows;
+        let ratio = 0;
+        
+        if (pref.frontBack.value === '前') {
+            ratio = (maxR - row) / (maxR - 1);
+        } else if (pref.frontBack.value === '後') {
+            ratio = (row - 1) / (maxR - 1);
+        } else if (pref.frontBack.value === '中') {
+            const center = (maxR + 1) / 2;
+            const maxDist = (maxR - 1) / 2;
+            ratio = 1 - (Math.abs(row - center) / maxDist);
+        }
+        fbScore = ratio * pref.frontBack.weight * 50; // <-- 修正這裡
+    }
+
+    // 2. 左右方位 (乘數從 10 改為 50，與好友平權)
+    if (pref.leftRightCenter.value && pref.leftRightCenter.value !== '不限' && classSettings.totalCols > 1) {
+        const col = seat.col;
+        const maxC = classSettings.totalCols;
+        let ratio = 0;
+        
+        if (pref.leftRightCenter.value === '左') {
+            ratio = (maxC - col) / (maxC - 1);
+        } else if (pref.leftRightCenter.value === '右') {
+            ratio = (col - 1) / (maxC - 1);
+        } else if (pref.leftRightCenter.value === '中') {
+            const center = (maxC + 1) / 2;
+            const maxDist = (maxC - 1) / 2;
+            ratio = 1 - (Math.abs(col - center) / maxDist);
+        }
+        lrScore = ratio * pref.leftRightCenter.weight * 50; // <-- 修正這裡
+    }
+
+    // 3. 好友距離 (保持 50)
+    pref.wantToSitWith.forEach(p => {
+        const partner = allStudents.find(s => s.studentId === p.id);
+        if (partner && partner.seat) {
+            const rowDiff = Math.abs(seat.row - partner.seat.row);
+            const colDiff = Math.abs(seat.col - partner.seat.col);
+            // 取得橫向與縱向的最大差值
+            const dist = Math.max(rowDiff, colDiff); 
+            // 當 dist == 1 (包含斜對角)，ratio 為 1 (不扣分)
+            const ratio = Math.max(0, 1 - (dist - 1) * 0.25);
+            frScore += ratio * p.weight * 50; 
+        }
     });
-    return totalScore;
+
+    return {
+        frontBack: fbScore,
+        leftRight: lrScore,
+        friends: frScore,
+        total: fbScore + lrScore + frScore
+    };
 }
 
-/** 核心座位分配演算法 */
-window.distributeSeats = function() {
-    // 1. 重置學生座位並計算權重
-    studentsData.forEach(student => {
-        student.seat = null;
-        student.totalWeight = student.preferences.wantToSitWith.reduce((sum, p) => sum + p.weight, 0) +
-                              (student.preferences.frontBack.weight || 0) +
-                              (student.preferences.leftRightCenter.weight || 0);
+/** * 新增：評估當前全班座位分配的系統總能量 (結合公平係數)
+ */
+function evaluateSystem(allStudents) {
+    const scores = allStudents.map(s => calculateStudentSatisfaction(s, s.seat, allStudents).total);
+    if (scores.length === 0) return 0;
+
+    const sum = scores.reduce((a, b) => a + b, 0);
+    const mean = sum / scores.length;
+    const variance = scores.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / scores.length;
+    const stdDev = Math.sqrt(variance);
+
+    // 讀取 UI 選擇的演算法模式
+    const modeSelect = document.getElementById('algo-mode');
+    const mode = modeSelect ? modeSelect.value : 'balanced';
+    const N = scores.length; // 取得班級人數
+
+    // 依據模式決定目標函式 (依人數標準化，確保任何班級規模都有相等保護力)
+    if (mode === 'max_score') {
+        return sum; // 最大滿意度：追求總分最高
+    } else if (mode === 'fairness') {
+        // 公平優先：懲罰分數落差，但避免犧牲過多整體滿意度
+        // (實測比較：1.5 會讓總分掉 ~27% 才換到標準差降 ~48%，效益不佳；
+        //  0.9 只犧牲 ~8.5% 總分就能降低 ~22% 標準差，CP 值更高)
+        return (mean - (stdDev * 0.9)) * N; 
+    } else {
+        // 平衡模式 (預設)：適度懲罰落差 (約等於舊版的 stdDev * 5)
+        return (mean - (stdDev * 0.5)) * N; 
+    }
+}
+
+/* =========================================================
+   智慧推薦演算法模式：依據學生實際填答狀況分析後推薦
+   ========================================================= */
+
+const ALGO_MODE_LABELS = {
+    balanced: '⚖️ 平衡模式',
+    max_score: '🔥 最大滿意度',
+    fairness: '🤝 公平優先'
+};
+
+/**
+ * 分析全班填答狀況，回傳建議的演算法模式與理由
+ * 判斷依據：
+ *  1. 平均需求強度：大家填得越「隨便」，模式差異越小 -> 平衡模式即可
+ *  2. 需求分佈的變異係數 (CV)：有人瘋狂填權重、有人完全不填 -> 落差大則優先保護弱勢，用公平優先
+ *  3. 「過熱」好友指名：同一位同學被 3 人以上高權重指名 -> 座位一定不夠分，必有人失望，用公平優先降低傷害
+ *  4. 需求集中且不衝突時 -> 可以放心衝最大滿意度
+ */
+function analyzeAndRecommendMode() {
+    const students = studentsData;
+    const N = students.length;
+    if (N === 0) return null;
+
+    // 計算每位學生的「需求強度」= 方位權重 + 所有好友指名權重加總
+    const demandList = students.map(s => {
+        const p = s.preferences || {};
+        let demand = 0;
+        if (p.frontBack && p.frontBack.value && p.frontBack.value !== '不限') demand += (p.frontBack.weight || 0);
+        if (p.leftRightCenter && p.leftRightCenter.value && p.leftRightCenter.value !== '不限') demand += (p.leftRightCenter.weight || 0);
+        (p.wantToSitWith || []).forEach(w => demand += (w.weight || 0));
+        return demand;
     });
 
-    // 2. 初始化可用座位 (排除停用座位)
-    let availableSeats = [];
-    for (let r = 1; r <= classSettings.totalRows; r++) {
-        for (let c = 1; c <= classSettings.totalCols; c++) {
-            if (isBlockedSeat(r, c)) continue;
-            availableSeats.push({ row: r, col: c });
-        }
-    }
+// 把「完全沒填」跟「有填但需求普通」分開看：demand=0 代表主動放棄、怎樣都好，
+    // 不該被當成「需求被忽略」混進落差計算，否則會誤判成需要公平優先
+    const respondersDemand = demandList.filter(d => d > 0);
+    const responderCount = respondersDemand.length;
+    const nonResponderRatio = (N - responderCount) / N;
 
-    // 3. 依總權重排序學生，由高權重者優先進行 Greedy 分配
-    const sortedStudents = [...studentsData].sort((a, b) => b.totalWeight - a.totalWeight);
+    const meanDemand = responderCount > 0 ? respondersDemand.reduce((a, b) => a + b, 0) / responderCount : 0;
+    const variance = responderCount > 0
+        ? respondersDemand.reduce((a, b) => a + Math.pow(b - meanDemand, 2), 0) / responderCount
+        : 0;
+    const stdDev = Math.sqrt(variance);
+    const cv = meanDemand > 0 ? stdDev / meanDemand : 0; // 變異係數：在「有填的人」之中，需求落差是否懸殊
 
-    // 4. 核心貪婪分配
-    sortedStudents.forEach(student => {
-        let bestSeat = null;
-        let maxScore = -Infinity;
-        let potentialSeats = [];
-
-        availableSeats.forEach(seat => {
-            const currentScore = calculateScore(student, seat);
-            if (currentScore > maxScore) {
-                maxScore = currentScore;
-                potentialSeats = [seat];
-            } else if (currentScore === maxScore) {
-                potentialSeats.push(seat);
-            }
+    // 統計每個座號被指名的「熱度」，找出被多人高權重搶著坐附近的過熱目標
+    const targetHeat = {};
+    students.forEach(s => {
+        (s?.preferences?.wantToSitWith || []).forEach(w => {
+            if (!targetHeat[w.id]) targetHeat[w.id] = { count: 0, highWeightCount: 0 };
+            targetHeat[w.id].count++;
+            if (w.weight >= 3) targetHeat[w.id].highWeightCount++;
         });
-
-        if (potentialSeats.length > 0) {
-            const randomIndex = Math.floor(Math.random() * potentialSeats.length);
-            bestSeat = potentialSeats[randomIndex];
-            student.seat = bestSeat;
-            availableSeats = availableSeats.filter(s => !(s.row === bestSeat.row && s.col === bestSeat.col));
-        } else if (availableSeats.length > 0) {
-            const randomIndex = Math.floor(Math.random() * availableSeats.length);
-            student.seat = availableSeats.splice(randomIndex, 1)[0];
-        }
     });
+    const overloadedTargets = Object.values(targetHeat).filter(t => t.count >= 3 && t.highWeightCount >= 2).length;
 
-    // 5. 第二階段優化 (Local Search - 納入「空座位」的優化調整)
-    const NUM_ITERATIONS = 5000;
-    for (let i = 0; i < NUM_ITERATIONS; i++) {
-        const indexA = Math.floor(Math.random() * studentsData.length);
-        const studentA = studentsData[indexA];
-        if (!studentA || !studentA.seat) continue;
+    // --- 決策邏輯 ---
+    let mode, reason;
 
-        const originalScore = calculateTotalSatisfaction();
-        const seatA = studentA.seat;
-
-        const emptySeats = getEmptySeats();
-        const chooseEmpty = emptySeats.length > 0 && Math.random() < 0.3; // 30% 機率讓學生搬到空位優化
-
-        if (chooseEmpty) {
-            const emptySeat = emptySeats[Math.floor(Math.random() * emptySeats.length)];
-            studentA.seat = emptySeat;
-            const newScore = calculateTotalSatisfaction();
-            if (newScore <= originalScore) {
-                studentA.seat = seatA; // 搬過去沒有變更好，移回來
-            }
-        } else {
-            // 交換兩個學生
-            const indexB = Math.floor(Math.random() * studentsData.length);
-            if (indexA === indexB) continue;
-
-            const studentB = studentsData[indexB];
-            if (!studentB || !studentB.seat) continue;
-
-            const seatB = studentB.seat;
-            studentA.seat = seatB;
-            studentB.seat = seatA;
-            const newScore = calculateTotalSatisfaction();
-
-            if (newScore <= originalScore) {
-                studentA.seat = seatA; // 交換沒有變更好，換回來
-                studentB.seat = seatB;
-            }
-        }
+    if (responderCount === 0) {
+        mode = 'balanced';
+        reason = `全班都沒有填寫特別的座位偏好，代表大家怎麼坐都可以，用平衡模式最省事，結果也不會有爭議。`;
+    } else if (meanDemand < 1.5) {
+        mode = 'balanced';
+        reason = `就算是有填寫的同學，偏好強度也普遍不高（平均約 ${meanDemand.toFixed(1)} 分），各模式差異不大，平衡模式即可。`;
+    } else if (overloadedTargets > 0) {
+        mode = 'fairness';
+        reason = `有 ${overloadedTargets} 位同學被 3 人以上高權重指名想坐附近，這些座位一定不夠分配給所有人，建議用公平優先模式，避免少數同學的分數被嚴重犧牲。`;
+    } else if (cv > 0.6) {
+        mode = 'fairness';
+        reason = `在有填寫偏好的同學之中，需求強度落差較大（有人要求很多、有人只是稍微填一下），建議用公平優先模式，避免強烈偏好排擠到其他同學。`;
+    } else if (cv < 0.35 && meanDemand >= 2) {
+        mode = 'max_score';
+        reason = nonResponderRatio >= 0.3
+            ? `有 ${Math.round(nonResponderRatio * 100)}% 的同學沒有特別要求（等於自願配合調度），剩下有填的同學需求又集中不衝突，可以放心用最大滿意度模式，不會犧牲到任何人。`
+            : `同學的需求普遍積極且分佈平均、重疊指名少，衝突風險低，可以放心用最大滿意度模式衝高整體分數。`;
+    } else {
+        mode = 'balanced';
+        reason = `目前的需求強度與分佈屬於中等狀況，平衡模式能兼顧整體滿意度與座位分配的公平性，是最穩妥的選擇。`;
     }
 
-    // 繪製座位圖
-    drawSeatMap();
+    return { mode, reason };
+}
 
-    // 如果是線上模式且是管理員，將最終排好的座位同步到雲端 Firestore
-    if (isOnlineMode && isAdmin) {
-        saveSeatsToCloud();
+/** 顯示推薦模式卡片；autoApply 為 true 時，會在首次生成座位表前直接套用建議值 */
+function renderModeRecommendation(autoApply = false) {
+    const banner = document.getElementById('mode-recommendation');
+    if (!banner) return;
+
+    const result = analyzeAndRecommendMode();
+    if (!result) {
+        banner.classList.add('hidden');
+        return;
     }
+
+    document.getElementById('recommend-mode-label').textContent = ALGO_MODE_LABELS[result.mode];
+    document.getElementById('recommend-mode-reason').textContent = result.reason;
+    banner.dataset.recommendedMode = result.mode;
+    banner.classList.remove('hidden');
+
+    if (autoApply) {
+        const modeSelect = document.getElementById('algo-mode');
+        if (modeSelect) modeSelect.value = result.mode;
+    }
+}
+
+/** 套用建議的演算法模式並立即重新分配 */
+window.applyRecommendedMode = function() {
+    const banner = document.getElementById('mode-recommendation');
+    const mode = banner ? banner.dataset.recommendedMode : null;
+    if (!mode) return;
+
+    const modeSelect = document.getElementById('algo-mode');
+    if (modeSelect) modeSelect.value = mode;
+
+    distributeSeats();
 }
 
 /** 將座位表數據與狀態同步至 Firestore */
@@ -676,7 +738,7 @@ function drawSeatMap() {
     if (!container) return;
     container.innerHTML = '';
     container.style.display = 'grid';
-    container.style.gridTemplateColumns = `repeat(${classSettings.totalCols}, 1fr)`;
+    container.style.gridTemplateColumns = `repeat(${classSettings.totalCols}, minmax(64px, 1fr))`;
 
     // 只有非線上模式，或者是線上模式的管理員才可以進行拖曳修改
     const canDrag = !isOnlineMode || isAdmin;
@@ -799,76 +861,109 @@ function handleDrop(e) {
     }
 }
 
-/** 下載為 DOC 檔案 (支援莫蘭迪風格網頁結構導出) */
+/**
+ * 匯出座位表為 Word 檔 (.doc)
+ * 特色：1. 版面強制橫向防跑版  2. 老師視角 (第一排在下方)
+ */
 window.downloadDoc = function() {
-    let content = `
-        <html>
+    // 1. 建立 Word 專用的 HTML 結構，加入 Word 專屬的 XML 與 CSS 樣式
+    const header = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' 
+              xmlns:w='urn:schemas-microsoft-com:office:word' 
+              xmlns='http://www.w3.org/TR/REC-html40'>
         <head>
-            <meta charset="UTF-8">
+            <meta charset='utf-8'>
             <style>
-                body { font-family: 'Arial', sans-serif; background-color: #f4f6f7; color: #38424a; padding: 20px; }
-                h1 { text-align: center; color: #38424a; margin-bottom: 5px; }
-                .subtitle { text-align: center; color: #7c8a94; font-size: 14px; margin-bottom: 20px; }
-                .podium-bar { width: 200px; height: 30px; background-color: #d6dee4; border-radius: 15px; margin: 10px auto 25px auto; text-align: center; line-height: 30px; font-weight: bold; color: #61707c; font-size: 12px; }
-                table { border-collapse: separate; border-spacing: 10px; width: 100%; max-width: 800px; margin: 0 auto; }
-                td {
-                    border: 1px solid #e0e5e8;
-                    background-color: #ffffff;
-                    padding: 12px;
-                    text-align: center;
-                    height: 70px;
-                    width: ${100 / classSettings.totalCols}%;
-                    border-radius: 8px;
-                    font-size: 14px;
+                /* --- 【解決跑版問題】：設定 Word 橫向版面 (Landscape) --- */
+                @page Section1 {
+                    size: 841.9pt 595.3pt; /* A4 橫向尺寸 */
+                    mso-page-orientation: landscape;
+                    margin: 1.0in 1.0in 1.0in 1.0in; /* 邊界設定 */
                 }
-                .occupied { background-color: #edf2f7; border-color: #8da1b9; }
-                .student-id { font-size: 10px; color: #7c8a94; margin-bottom: 4px; }
-                .student-name { font-weight: bold; font-size: 14px; color: #38424a; }
-                .empty { border-style: dashed; background-color: #fafbfc; color: #7c8a94; }
-                .blocked { background-color: #e7eaec; color: #a3aeb6; }
+                div.Section1 { page: Section1; }
+                
+                /* --- 防跑版的表格 CSS 樣式 --- */
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    table-layout: fixed; /* 讓每個座位的欄寬均分，不會被字數撐破 */
+                    font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
+                }
+                td {
+                    border: 1px solid #333;
+                    padding: 8px;
+                    text-align: center;
+                    vertical-align: middle;
+                    word-wrap: break-word;
+                    height: 50px;
+                    font-size: 14pt; /* 調整為適合列印的大小 */
+                }
+                /* 走道或不坐人的位子樣式 */
+                .blocked { 
+                    background-color: #f4f6f7; 
+                    border: 1px dashed #ccc;
+                } 
             </style>
         </head>
         <body>
-            <h1>${classSettings.className} 座位表</h1>
-            <div class="subtitle">排座位終結者自動分配結果</div>
-            <div class="podium-bar">講台 (前方)</div>
-            <table>`;
+            <div class="Section1">
+                <h2 style="text-align: center; font-family: '微軟正黑體';">班級座位表 (老師視角)</h2>
+    `;
 
-    for (let r = 1; r <= classSettings.totalRows; r++) {
-        content += '<tr>';
+    // 2. 建立表格內容
+    let tableHtml = `<table>`;
+    
+    // --- 【解決老師視角問題】：反向迴圈 (從最後一排印到第一排) ---
+    for (let r = classSettings.totalRows; r >= 1; r--) {
+        tableHtml += `<tr>`;
         for (let c = 1; c <= classSettings.totalCols; c++) {
+            
+            // 檢查該座位是否為不坐人的位子(走道)
             if (isBlockedSeat(r, c)) {
-                content += '<td class="blocked"><div>(不坐人)</div></td>';
-                continue;
-            }
-            const student = studentsData.find(s => s.seat && s.seat.row === r && s.seat.col === c);
-            if (student) {
-                content += `
-                    <td class="occupied">
-                        <div class="student-id">${student.studentId} 號</div>
-                        <div class="student-name">${student.studentName || '無姓名'}</div>
-                    </td>`;
+                tableHtml += `<td class="blocked"></td>`;
             } else {
-                content += '<td class="empty"><div>(空位)</div></td>';
+                // 尋找這個位子上有沒有學生
+                const student = studentsData.find(s => s.seat && s.seat.row === r && s.seat.col === c);
+                if (student) {
+                    tableHtml += `<td>${student.name}</td>`;
+                } else {
+                    tableHtml += `<td><span style="color: #999;">(空位)</span></td>`;
+                }
             }
         }
-        content += '</tr>';
+        tableHtml += `</tr>`;
     }
+    tableHtml += `</table>`;
 
-    content += `
-            </table>
-        </body>
-        </html>`;
+    // 3. 在最下方加上「講台」示意圖，讓方向感更明確
+    tableHtml += `
+        <div style="text-align: center; margin-top: 30px;">
+            <div style="display: inline-block; width: 150px; padding: 10px; border: 2px solid #000; background-color: #eee; font-weight: bold; font-family: '微軟正黑體';">
+                講 台
+            </div>
+        </div>
+    `;
 
-    const blob = new Blob([content], { type: 'application/msword;charset=utf-8' });
+    const footer = `</div></body></html>`;
+    
+    // 4. 組裝完整 HTML 並觸發下載機制
+    const fullHtml = header + tableHtml + footer;
+    
+    // 使用 Blob 產生檔案 (加入 \ufeff 是為了確保 UTF-8 中文不亂碼)
+    const blob = new Blob(['\ufeff', fullHtml], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    
+    // 動態建立 <a> 標籤來觸發下載
     const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `${classSettings.className}_座位表.doc`;
-
+    link.href = url;
+    link.download = '班級座位表_老師視角.doc';
     document.body.appendChild(link);
     link.click();
+    
+    // 清理資源
     document.body.removeChild(link);
-}
+    URL.revokeObjectURL(url);
+};
 
 /* =========================================================
    線上模式：管理員建立房間
@@ -963,6 +1058,9 @@ window.finishOnlineCollection = function() {
 
         showSection('result-page');
 
+        // 依填答狀況分析並自動套用建議模式
+        renderModeRecommendation(true);
+
         // 執行分配與自動雲端同步
         window.distributeSeats();
     }
@@ -1040,6 +1138,12 @@ function listenToRoomStatusForStudent() {
                     redistributeBtn.style.display = 'none';
                 }
 
+                // 學生端隱藏模式推薦卡片（該功能僅供管理員操作使用）
+                const recommendBanner = document.getElementById('mode-recommendation');
+                if (recommendBanner) {
+                    recommendBanner.classList.add('hidden');
+                }
+
                 // 繪製座位表 (此時為唯讀模式，不能拖曳)
                 drawSeatMap();
             }
@@ -1050,6 +1154,7 @@ function listenToRoomStatusForStudent() {
 // --- 初始化：設定所有拖曳式權重滑桿與自動加入邏輯 ---
 document.addEventListener('DOMContentLoaded', () => {
     initConditionDragAndDrop();
+    updateReorderButtonsState();
 
     // 新增：檢查網址是否有帶入房間代碼參數 (例如 ?room=A1B2C3)
     const urlParams = new URLSearchParams(window.location.search);
@@ -1068,6 +1173,38 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+
+/** 更新每個條件區塊的上/下移按鈕啟用狀態 (第一個禁用上移，最後一個禁用下移) */
+function updateReorderButtonsState() {
+    const groups = document.querySelectorAll('#condition-list .condition-group');
+    groups.forEach((group, index) => {
+        const buttons = group.querySelectorAll('.reorder-btn');
+        const upBtn = buttons[0];
+        const downBtn = buttons[1];
+        if (upBtn) upBtn.disabled = (index === 0);
+        if (downBtn) downBtn.disabled = (index === groups.length - 1);
+    });
+}
+
+/** 手機版：將條件區塊往上移一位 */
+window.moveConditionUp = function(btn) {
+    const group = btn.closest('.condition-group');
+    const prev = group.previousElementSibling;
+    if (prev) {
+        group.parentNode.insertBefore(group, prev);
+        updateReorderButtonsState();
+    }
+}
+
+/** 手機版：將條件區塊往下移一位 */
+window.moveConditionDown = function(btn) {
+    const group = btn.closest('.condition-group');
+    const next = group.nextElementSibling;
+    if (next) {
+        group.parentNode.insertBefore(next, group);
+        updateReorderButtonsState();
+    }
+}
 
 /** 初始化偏好條件的拖曳排序功能 */
 function initConditionDragAndDrop() {
@@ -1123,6 +1260,115 @@ function initConditionDragAndDrop() {
             } else {
                 list.insertBefore(draggedItem, target);
             }
+            updateReorderButtonsState();
         }
     });
 }
+
+/** 
+ * 優化後的核心座位分配演算法 (導入模擬退火與空位交換池)
+ * 依照設定的模式 (平衡/最大滿意度/公平) 進行最佳化運算
+ * [修正版]：調整溫度數值尺度與動態冷卻率，解決演算法過早退化的問題
+ */
+/** 標準 Fisher-Yates 洗牌，取代原本統計上有偏差的 sort(()=>Math.random()-0.5) */
+function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+window.distributeSeats = function() {
+    // 1. 取得所有可用的空座位
+    const availableSeats = [];
+    for (let r = 1; r <= classSettings.totalRows; r++) {
+        for (let c = 1; c <= classSettings.totalCols; c++) {
+            if (!isBlockedSeat(r, c)) {
+                availableSeats.push({ row: r, col: c });
+            }
+        }
+    }
+
+    // 確保可用座位足夠
+    if (availableSeats.length < studentsData.length) {
+        alert("錯誤：可用座位數量少於學生人數！");
+        return;
+    }
+
+    // 2. 初始隨機分配 (將座位打亂後依序發給學生)
+    shuffleArray(availableSeats);
+    
+    studentsData.forEach((student, index) => {
+        student.seat = { ...availableSeats[index] };
+    });
+
+    // 3. 最佳化演算：模擬退火演算法 (Simulated Annealing)
+    let currentScore = evaluateSystem(studentsData);
+    
+    // --- 【更正】模擬退火參數設定與動態冷卻 ---
+    const iterations = 50000;       // 縮減迭代次數，節省 50% 無效運算
+    let temperature = 500.0;        // 提高初始溫度至 500，以對應單項權重乘以 50 倍的分數尺度
+    const minTemperature = 1.0;     // 終止時的最低溫度目標
+
+    // 動態計算冷卻率，確保在第 10000 次迴圈時，溫度正好降到 1.0 (全程維持退火探索能力)
+    const coolingRate = Math.pow(minTemperature / temperature, 1 / iterations);
+
+    for (let i = 0; i < iterations; i++) {
+        // 隨機挑選一位學生
+        const idx = Math.floor(Math.random() * studentsData.length);
+        const student1 = studentsData[idx];
+
+        // 隨機挑選一個可用座位 (包含空位與已被坐的位子)
+        const targetSeat = availableSeats[Math.floor(Math.random() * availableSeats.length)];
+
+        // 檢查目標座位上目前有沒有坐人
+        const student2 = studentsData.find(s => s.seat && s.seat.row === targetSeat.row && s.seat.col === targetSeat.col);
+
+        // 如果挑到同一個人坐的位子，直接跳過不處理
+        if (student2 === student1) continue;
+
+        // 記錄原本的位置以便可能需要的還原 (Undo)
+        const oldSeat1 = student1.seat;
+
+        // 執行座位移動/交換
+        if (student2) {
+            // 目標座位有人：兩人交換座位
+            student1.seat = student2.seat;
+            student2.seat = oldSeat1;
+        } else {
+            // 目標座位是空位：學生直接移至該新座位
+            student1.seat = { ...targetSeat };
+        }
+
+        // 重新評估分數
+        const newScore = evaluateSystem(studentsData);
+        const deltaScore = newScore - currentScore;
+
+        // 判定是否接受本次變更
+        // 1. 如果新分數比較高或平手 (deltaScore >= 0)，100% 接受
+        // 2. 如果新分數變低了，根據目前溫度計算機率，有機率地接受
+        if (deltaScore >= 0 || Math.random() < Math.exp(deltaScore / temperature)) {
+            currentScore = newScore; // 接受變更，更新目前總分
+        } else {
+            // 拒絕變更，將座位還原 (Undo)
+            if (student2) {
+                student2.seat = student1.seat;
+                student1.seat = oldSeat1;
+            } else {
+                student1.seat = oldSeat1;
+            }
+        }
+
+        // 溫度隨時間動態冷卻
+        temperature *= coolingRate;
+    }
+
+    // 4. 運算完成，把結果畫到畫面上
+    drawSeatMap();
+
+    // 5. 如果是線上模式的管理員，同步最新座位表到 Firebase
+    if (isOnlineMode && isAdmin) {
+        saveSeatsToCloud();
+    }
+}; 

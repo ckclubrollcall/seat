@@ -135,11 +135,15 @@
             </div>
 
             <fieldset>
-                <legend>座位偏好條件（按住 ≡ 拖曳調整優先順序，越上面越重要）</legend>
+                <legend>座位偏好條件（電腦可按住 ≡ 拖曳，手機請用 ▲▼ 調整順序，越上面越重要）</legend>
                 <div id="condition-list">
                     <!-- 條件 1 -->
                     <div class="condition-group" draggable="true">
                         <div class="drag-handle">≡</div>
+                        <div class="reorder-buttons">
+                            <button type="button" class="reorder-btn" onclick="moveConditionUp(this)" aria-label="上移">▲</button>
+                            <button type="button" class="reorder-btn" onclick="moveConditionDown(this)" aria-label="下移">▼</button>
+                        </div>
                         <label for="pref-1-id">想跟誰坐 (1):</label>
                         <input type="number" class="preference-id" id="pref-1-id" placeholder="好友座號">
                     </div>
@@ -147,6 +151,10 @@
                     <!-- 條件 2 -->
                     <div class="condition-group" draggable="true">
                         <div class="drag-handle">≡</div>
+                        <div class="reorder-buttons">
+                            <button type="button" class="reorder-btn" onclick="moveConditionUp(this)" aria-label="上移">▲</button>
+                            <button type="button" class="reorder-btn" onclick="moveConditionDown(this)" aria-label="下移">▼</button>
+                        </div>
                         <label for="pref-2-id">想跟誰坐 (2):</label>
                         <input type="number" class="preference-id" id="pref-2-id" placeholder="好友座號">
                     </div>
@@ -154,6 +162,10 @@
                     <!-- 條件 3 -->
                     <div class="condition-group" draggable="true">
                         <div class="drag-handle">≡</div>
+                        <div class="reorder-buttons">
+                            <button type="button" class="reorder-btn" onclick="moveConditionUp(this)" aria-label="上移">▲</button>
+                            <button type="button" class="reorder-btn" onclick="moveConditionDown(this)" aria-label="下移">▼</button>
+                        </div>
                         <label for="pref-5-val">想坐前後:</label>
                         <select id="pref-5-val">
                             <option value="不限">不限</option>
@@ -166,6 +178,10 @@
                     <!-- 條件 4 -->
                     <div class="condition-group" draggable="true">
                         <div class="drag-handle">≡</div>
+                        <div class="reorder-buttons">
+                            <button type="button" class="reorder-btn" onclick="moveConditionUp(this)" aria-label="上移">▲</button>
+                            <button type="button" class="reorder-btn" onclick="moveConditionDown(this)" aria-label="下移">▼</button>
+                        </div>
                         <label for="pref-6-val">想坐左右:</label>
                         <select id="pref-6-val">
                             <option value="不限">不限</option>
@@ -195,7 +211,26 @@
             <!-- 動態生成座位表 -->
         </div>
 
-        <div style="margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px;">
+        <div id="mode-recommendation" class="mode-recommendation hidden">
+            <div class="mode-recommendation-icon">💡</div>
+            <div class="mode-recommendation-text">
+                <div class="mode-recommendation-title">系統建議：<span id="recommend-mode-label"></span></div>
+                <div class="mode-recommendation-reason" id="recommend-mode-reason"></div>
+            </div>
+            <button onclick="applyRecommendedMode()" class="btn-info mode-recommendation-btn">套用建議並重新分配</button>
+        </div>
+
+        <div style="margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+            
+            <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 8px;">
+                <label for="algo-mode" style="margin-bottom: 0;">演算法模式:</label>
+                <select id="algo-mode" style="width: auto; padding: 8px 16px;">
+                    <option value="balanced" selected>⚖️ 平衡模式 (預設)</option>
+                    <option value="max_score">🔥 最大滿意度</option>
+                    <option value="fairness">🤝 公平優先</option>
+                </select>
+            </div>
+
             <button onclick="distributeSeats()" id="redistribute-btn" class="btn-primary">重新分配</button>
             <button onclick="downloadDoc()" id="download-btn" class="btn-success">下載為 DOC 檔案</button>
         </div>

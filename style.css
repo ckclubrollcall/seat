@@ -56,7 +56,10 @@ h1 {
     font-size: 2.2rem;
     font-weight: 700;
     text-align: center;
-    color: var(--text-primary);
+    background: linear-gradient(135deg, var(--text-primary) 20%, var(--accent-deep) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
     margin-bottom: 8px;
     letter-spacing: 1px;
 }
@@ -76,6 +79,10 @@ h1 {
     box-shadow: var(--shadow-md);
     border: 1px solid rgba(255, 255, 255, 0.8);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.page-section.page-enter {
+    animation: fadeIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .page-section h2 {
@@ -121,8 +128,24 @@ h1 {
 }
 
 .landing-btn .icon {
-    font-size: 2rem;
+    font-size: 1.8rem;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: var(--primary-light);
+    transition: background-color 0.25s ease, transform 0.25s ease;
 }
+
+.landing-btn:hover .icon {
+    transform: scale(1.08);
+}
+
+.landing-btn.create .icon { background-color: var(--primary-pale); }
+.landing-btn.join .icon { background-color: #eef4f8; }
+.landing-btn.offline .icon { background-color: #e9eef1; }
 
 .landing-btn .title {
     font-weight: 600;
@@ -212,6 +235,16 @@ button:active {
     transform: translateY(0);
 }
 
+button:focus-visible,
+.landing-btn:focus-visible,
+input:focus-visible,
+select:focus-visible,
+.reorder-btn:focus-visible,
+.drag-handle:focus-visible {
+    outline: 2.5px solid var(--accent-deep);
+    outline-offset: 2px;
+}
+
 /* 不同按鈕的角色顏色（皆為藍色調） */
 .btn-primary {
     background-color: var(--primary-color);
@@ -251,6 +284,60 @@ button:active {
 }
 .btn-secondary:hover {
     background-color: #e4e8eb;
+}
+
+/* 演算法模式智慧推薦卡片 */
+.mode-recommendation {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    padding: 16px 20px;
+    margin-bottom: 18px;
+    background: linear-gradient(135deg, var(--primary-pale) 0%, var(--primary-light) 100%);
+    border: 1px solid var(--border-focus);
+    border-left: 4px solid var(--accent-deep);
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+}
+
+.mode-recommendation-icon {
+    flex-shrink: 0;
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
+.mode-recommendation-text {
+    flex: 1 1 auto;
+    min-width: 200px;
+}
+
+.mode-recommendation-title {
+    font-weight: 600;
+    color: var(--accent-deep);
+    margin-bottom: 4px;
+    font-size: 0.98rem;
+}
+
+.mode-recommendation-reason {
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+
+.mode-recommendation-btn {
+    flex-shrink: 0;
+    margin: 0 !important;
+    white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+    .mode-recommendation {
+        flex-wrap: wrap;
+    }
+    .mode-recommendation-btn {
+        width: 100%;
+    }
 }
 
 /* 加入房間區塊 */
@@ -320,6 +407,42 @@ legend {
 
 .drag-handle:active {
     cursor: grabbing;
+}
+
+/* 手機版上/下移按鈕：預設隱藏，桌機用拖曳、手機用按鈕更可靠 */
+.reorder-buttons {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    height: 100%;
+}
+
+.reorder-btn {
+    all: unset;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-height: 22px;
+    font-size: 0.7rem;
+    line-height: 1;
+    color: var(--text-secondary);
+    background-color: #f4f6f7;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.reorder-btn:active {
+    background-color: var(--primary-pale);
+    color: var(--accent-deep);
+}
+
+.reorder-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
 }
 
 /* 拖曳中與準備放置時的明確提示 */
@@ -701,6 +824,9 @@ legend {
     .page-section {
         padding: 20px;
     }
+    .page-section h2 {
+        font-size: 1.25rem;
+    }
     .form-row {
         grid-template-columns: 1fr;
         gap: 0;
@@ -708,16 +834,72 @@ legend {
     .landing-options {
         grid-template-columns: 1fr;
     }
+
+    /* --- 條件卡片：把手改為左側整條、標籤與欄位堆疊，避免「≡」單獨佔一整排 --- */
     .condition-group {
-        grid-template-columns: 1fr;
-        gap: 8px;
+        grid-template-columns: 40px 1fr;
+        grid-template-rows: auto auto;
+        grid-template-areas:
+            "handle label"
+            "handle field";
+        row-gap: 6px;
+        column-gap: 12px;
+        align-items: center;
     }
-    .condition-group label {
-        margin-bottom: 2px;
+    .condition-group .drag-handle {
+        display: none; /* 原生拖曳在多數手機瀏覽器不可靠，改用下方按鈕 */
     }
+    .condition-group .reorder-buttons {
+        display: flex;
+        grid-area: handle;
+        align-self: stretch;
+    }
+    .condition-group > label {
+        grid-area: label;
+        margin-bottom: 0;
+        font-size: 0.88rem;
+    }
+    .condition-group > input,
+    .condition-group > select {
+        grid-area: field;
+    }
+
+    /* --- 觸控細節優化 --- */
+    /* iOS 若欄位字級小於 16px，focus 時會自動放大整個頁面，這裡統一鎖住字級避免跳動 */
+    input[type="number"], input[type="text"], select {
+        font-size: 16px;
+        padding: 11px 14px;
+    }
+    /* 放大可點擊區域，符合手機觸控建議的最小尺寸 */
     button {
+        min-height: 46px;
         width: 100%;
         margin-right: 0;
         margin-bottom: 10px;
+    }
+    .mode-recommendation-btn {
+        min-height: 44px;
+    }
+
+    /* --- 座位表／座位配置格線：欄位過多時允許橫向滑動，避免格子被擠到看不清楚 --- */
+    #seat-map-container, #layout-config-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 8px;
+    }
+    .seat-box, .layout-seat {
+        min-width: 64px;
+    }
+}
+
+@media (max-width: 420px) {
+    h1 {
+        font-size: 1.7rem;
+    }
+    .landing-btn {
+        padding: 22px 16px;
+    }
+    .page-section {
+        padding: 16px;
     }
 }
