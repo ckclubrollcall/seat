@@ -90,7 +90,7 @@ export function showModal(message, type = 'info') {
         const overlay = _createOverlay();
         const card = _createCard();
 
-        const icon = { info: 'ℹ️', error: '❌', success: '✅' }[type] || 'ℹ️';
+        const icon = { info: '提示', error: '錯誤', success: '成功' }[type] || '提示';
         const titleColor = {
             info: 'var(--accent-deep)',
             error: 'var(--error-text)',
@@ -134,7 +134,7 @@ export function showConfirm(message) {
         const card = _createCard();
 
         card.innerHTML = `
-            <div class="modal-icon">❓</div>
+            <div class="modal-icon">提示</div>
             <div class="modal-message">${_escHtml(message)}</div>
             <div class="modal-actions">
                 <button class="btn-secondary" id="modal-cancel">取消</button>
