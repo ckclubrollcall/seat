@@ -1645,7 +1645,7 @@ window.downloadDoc = function() {
         </head>
         <body>
             <div class="Section1">
-                <h2 style="text-align: center; font-family: '微軟正黑體';">${className}班級座位表 (老師視角)</h2>
+                <h2 style="text-align: center; font-family: '微軟正黑體';">${className}班級座位表</h2>
     `;
 
     let tableHtml = `<table>`;
@@ -1688,7 +1688,7 @@ window.downloadDoc = function() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${classSettings?.className ? `${classSettings.className}_` : ''}班級座位表_老師視角.doc`;
+    link.download = `${classSettings?.className ? `${classSettings.className}_` : ''}班級座位表.doc`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
