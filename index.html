@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>換個座位</title>
+    <meta name="description" content="依照學生需求，用模擬退火演算法自動生成最合適的班級座位表。支援線上收集與線下輪流輸入兩種模式。">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <meta name="google-site-verification" content="googlecd3f1215201b8b94">
+</head>
+<body>
+
+    <h1>換個座位</h1>
+    <div class="subtitle">依照學生要求畫出最合適的座位表</div>
+
+    <!-- 首頁：選擇使用方式 -->
+    <section id="landing-page" class="page-section page-enter">
+        <h2>首頁</h2>
+        <p>選擇最適合你的方式：讓全班同時上線填寫，或是用同一台電腦輪流輸入。</p>
+
+        <div class="landing-options">
+            <div class="landing-btn create" id="btn-create" role="button" tabindex="0" aria-label="建立房間">
+                <div class="icon"><img src="assets/images/create.png" alt="建立"></div>
+                <div class="title">建立房間</div>
+                <div class="desc">產生房間代碼，學生用自己的裝置上線填寫偏好</div>
+            </div>
+            <div class="landing-btn join" id="btn-join" role="button" tabindex="0" aria-label="加入房間">
+                <div class="icon"><img src="assets/images/key.png" alt="加入"></div>
+                <div class="title">加入房間</div>
+                <div class="desc">輸入老師提供的房間代碼，填寫你自己的座位偏好</div>
+            </div>
+            <div class="landing-btn offline" id="btn-offline" role="button" tabindex="0" aria-label="線下操作">
+                <div class="icon"><img src="assets/images/offline.png" alt="線下操作"></div>
+                <div class="title">線下操作</div>
+                <div class="desc">用同一台電腦，讓全班同學輪流輸入偏好資料</div>
+            </div>
+        </div>
+
+        <!-- 加入房間輸入框（隱藏，點選「加入房間」後展開） -->
+        <div id="join-box" class="join-box hidden" style="margin-top: 24px;">
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="room-code">房間代碼:</label>
+                <input type="text" id="room-code" placeholder="例如: A1B2C3" style="text-transform: uppercase;">
+            </div>
+            <button onclick="doJoinRoom()" class="btn-info">加入</button>
+            <button onclick="hideJoinBox()" class="btn-secondary">取消</button>
+        </div>
+
+        <!-- 演算法說明連結 -->
+        <div style="margin-top: 28px; text-align: center;">
+            <a href="algorithm.html" class="algo-link" id="algo-link-btn">
+                了解演算法如何運作
+            </a>
+        </div>
+    </section>
+
+    <div class="footer-info">
+        <p>換個座位 · 自動化座位配置工具</p>
+    </div>
+
+    <script src="assets/js/script.js" type="module"></script>
+</body>
+</html>

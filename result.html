@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>座位分配結果 — 換個座位</title>
+    <meta name="description" content="查看班級座位分配結果，可拖曳調整座位，並下載為 Word 檔案。">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+    <h1>換個座位</h1>
+    <div class="subtitle">依照學生要求畫出最合適的座位表</div>
+
+    <!-- 座位分配結果 -->
+    <section id="result-page" class="page-section page-enter">
+        <h2>座位分配結果</h2>
+        <p>分配依據: 偏好權重高者優先 > 隨機判定</p>
+        <p><b>(提示: 可拖曳座位方塊交換位置，或點選兩個座位直接互換；可手動補入未填寫學生)</b></p>
+
+        <!-- 即時人數與空位統計 -->
+        <div id="seat-stats-badge" class="seat-stats-badge">目前人數：0 人 · 剩餘空位：0 個</div>
+
+        <!-- 講台指示 -->
+        <div id="podium-container">
+            <div class="podium">講台</div>
+        </div>
+
+        <div id="seat-map-container">
+            <!-- 動態生成座位表 -->
+        </div>
+
+        <!-- 演算法模式智慧推薦卡片 -->
+        <div id="mode-recommendation" class="mode-recommendation hidden">
+            <div class="mode-recommendation-icon"><img src="assets/images/ai.png" alt="推薦"></div>
+            <div class="mode-recommendation-text">
+                <div class="mode-recommendation-title">自動推薦：<span id="recommend-mode-label"></span></div>
+                <div class="mode-recommendation-reason" id="recommend-mode-reason"></div>
+            </div>
+            <button onclick="applyRecommendedMode()" class="btn-info mode-recommendation-btn">套用並重新分配</button>
+        </div>
+
+        <!-- 手動添加學生區塊 (未掃碼填寫者) -->
+        <div id="add-student-container" class="add-student-box">
+            <div class="add-student-header">
+                <div class="add-student-title">➕ 手動添加學生（未掃碼者）</div>
+                <div class="add-student-desc">只須填寫座號與姓名，系統將自動安排至可用空位</div>
+            </div>
+            <div class="add-student-form">
+                <div class="add-student-inputs">
+                    <input type="number" id="manual-new-id" placeholder="座號 (例如: 15)" min="1">
+                    <input type="text" id="manual-new-name" placeholder="姓名 (例如: 王宥鈞)">
+                </div>
+                <div class="add-student-actions">
+                    <button type="button" onclick="addStudentManually()" class="btn-info" id="add-student-btn">添加學生</button>
+                    <button type="button" onclick="removeStudentManually()" class="btn-secondary" id="remove-student-btn" title="輸入上方座號可移除學生並釋出座位">移除學生</button>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+            <div id="algo-mode-group" class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 8px;">
+                <label for="algo-mode" style="margin-bottom: 0;">演算法模式:</label>
+                <select id="algo-mode" style="width: auto; padding: 8px 16px;">
+                    <option value="balanced" selected>平衡模式</option>
+                    <option value="max_score">最大滿意</option>
+                    <option value="fairness">公平優先</option>
+                </select>
+            </div>
+
+            <button onclick="distributeSeats()" id="redistribute-btn" class="btn-primary">重新分配</button>
+            <button onclick="downloadDoc()" id="download-btn" class="btn-success">下載為 DOC 檔案</button>
+            <button onclick="goHomeFromResult()" id="home-btn" class="btn-secondary">回到首頁</button>
+        </div>
+    </section>
+
+    <div class="footer-info">
+        <p>換個座位 · 自動化座位配置工具</p>
+    </div>
+
+    <script src="assets/js/script.js" type="module"></script>
+</body>
+</html>
